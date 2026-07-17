@@ -1,0 +1,20 @@
+:root {
+  --bg: #f7f3ee;
+  --text: #1c1a17;
+  --accent: #c45c26;
+}
+
+body {
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  background: linear-gradient(160deg, #f7f3ee, #e8dfd4);
+  color: var(--text);
+}
+
+header, main {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+
+a { color: var(--accent); }
