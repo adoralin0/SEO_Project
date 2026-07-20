@@ -1,0 +1,13 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+
+# Flask / database
+*.db
+*.sqlite
+*.sqlite3
+instance/
+
+# Environment secrets
+.env

@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Restaurant Dashboard</title>
+  <style>
+    :root { --gap: 12px; }
+    * { box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      max-width: 640px;
+      margin: 40px auto;
+      padding: 0 16px;
+      color: #1a1a1a;
+      line-height: 1.4;
+    }
+    h1 { font-size: 1.5rem; }
+    section {
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: var(--gap);
+    }
+    h2 { font-size: 1.05rem; margin: 0 0 12px; }
+    label { display: block; font-size: 0.85rem; margin-bottom: 4px; color: #555; }
+    input {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: var(--gap);
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 0.95rem;
+    }
+    button {
+      padding: 8px 14px;
+      border: none;
+      border-radius: 6px;
+      background: #2563eb;
+      color: #fff;
+      font-size: 0.9rem;
+      cursor: pointer;
+      margin-right: 8px;
+    }
+    button:hover { background: #1d4ed8; }
+    #status {
+      min-height: 1.4em;
+      padding: 8px 0;
+      font-size: 0.9rem;
+    }
+    #status.error { color: #dc2626; }
+    #status.success { color: #16a34a; }
+    ul { padding-left: 20px; }
+    li { margin-bottom: 4px; }
+    .muted { color: #888; font-size: 0.85rem; }
+  </style>
+</head>
+<body>
+  <h1>Restaurant Dashboard</h1>
+
+  <div id="status" aria-live="polite"></div>
+
+  <section>
+    <h2>1. Account</h2>
+    <label for="email">Email</label>
+    <input id="email" type="email" placeholder="you@example.com" autocomplete="username" />
+
+    <label for="password">Password</label>
+    <input id="password" type="password" placeholder="••••••••" autocomplete="current-password" />
+
+    <button onclick="register()">Register</button>
+    <button onclick="login()">Login</button>
+    <p class="muted" id="authState">Not logged in.</p>
+  </section>
+
+  <section>
+    <h2>2. Restaurants</h2>
+    <label for="restName">Restaurant name</label>
+    <input id="restName" type="text" placeholder="e.g. Blue Fig Cafe" />
+
+    <button onclick="addRestaurant()">Add</button>
+    <button onclick="loadRestaurants()">Load</button>
+
+    <ul id="restList"></ul>
+  </section>
+
+  <script>
+    const API = "http://localhost:5000/api";
+
+    // Token lives only in memory (a plain JS variable) — cleared on page reload.
+    let accessToken = null;
+
+    function setStatus(message, isError = false) {
+      const el = document.getElementById("status");
+      el.textContent = message;
+      el.className = isError ? "error" : "success";
+    }
+
+    function getCredentials() {
+      return {
+        email: document.getElementById("email").value.trim(),
+        password: document.getElementById("password").value,
+      };
+    }
+
+    async function register() {
+      const { email, password } = getCredentials();
+      try {
+        const res = await fetch(`${API}/auth/register`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password }),
+        });
+        const data = await res.json();
+        if (res.ok) {
+          setStatus(data.message || "Registered successfully.");
+        } else {
+          setStatus(data.error || "Registration failed.", true);
+        }
+      } catch (err) {
+        setStatus(`Network error: ${err.message}`, true);
+      }
+    }
+
+    async function login() {
+      const { email, password } = getCredentials();
+      try {
+        const res = await fetch(`${API}/auth/login`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password }),
+        });
+        const data = await res.json();
+        if (res.ok) {
+          accessToken = data.access_token;
+          document.getElementById("authState").textContent = `Logged in as ${email}.`;
+          setStatus("Logged in successfully.");
+        } else {
+          setStatus(data.error || "Login failed.", true);
+        }
+      } catch (err) {
+        setStatus(`Network error: ${err.message}`, true);
+      }
+    }
+
+    async function addRestaurant() {
+      if (!accessToken) {
+        setStatus("Log in first", true);
+        return;
+      }
+      const name = document.getElementById("restName").value.trim();
+      try {
+        const res = await fetch(`${API}/restaurants/`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({ name }),
+        });
+        const data = await res.json();
+        if (res.ok) {
+          setStatus(`Added "${data.name}" (id ${data.id}).`);
+          document.getElementById("restName").value = "";
+          loadRestaurants();
+        } else {
+          setStatus(data.error || "Could not add restaurant.", true);
+        }
+      } catch (err) {
+        setStatus(`Network error: ${err.message}`, true);
+      }
+    }
+
+    async function loadRestaurants() {
+      if (!accessToken) {
+        setStatus("Log in first", true);
+        return;
+      }
+      try {
+        const res = await fetch(`${API}/restaurants/`, {
+          method: "GET",
+          headers: { "Authorization": `Bearer ${accessToken}` },
+        });
+        const data = await res.json();
+        if (res.ok) {
+          const list = document.getElementById("restList");
+          list.textContent = "";
+          data.forEach((r) => {
+            const li = document.createElement("li");
+            li.textContent = `#${r.id} — ${r.name}`;
+            list.appendChild(li);
+          });
+          setStatus(`Loaded ${data.length} restaurant(s).`);
+        } else {
+          setStatus(data.error || data.msg || "Could not load restaurants.", true);
+        }
+      } catch (err) {
+        setStatus(`Network error: ${err.message}`, true);
+      }
+    }
+  </script>
+</body>
+</html>
