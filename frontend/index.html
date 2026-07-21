@@ -2,8 +2,60 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>SEO Project</title>
   <link rel="stylesheet" href="styles.css" />
+  <style>
+    .dashboard {
+      max-width: 640px;
+      margin: 0 auto 40px;
+      padding: 0 1.5rem;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      color: #1a1a1a;
+      line-height: 1.4;
+    }
+    .dashboard * { box-sizing: border-box; }
+    .dashboard .card {
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 12px;
+      background: #fff;
+    }
+    .dashboard h2 { font-size: 1.05rem; margin: 0 0 12px; }
+    .dashboard label { display: block; font-size: 0.85rem; margin-bottom: 4px; color: #555; }
+    .dashboard input, .dashboard select {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 12px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 0.95rem;
+      font-family: inherit;
+    }
+    .dashboard button {
+      padding: 8px 14px;
+      border: none;
+      border-radius: 6px;
+      background: #2563eb;
+      color: #fff;
+      font-size: 0.9rem;
+      cursor: pointer;
+      margin-right: 8px;
+      font-family: inherit;
+    }
+    .dashboard button:hover { background: #1d4ed8; }
+    .dashboard #status {
+      min-height: 1.4em;
+      padding: 8px 0;
+      font-size: 0.9rem;
+    }
+    .dashboard #status.error { color: #dc2626; }
+    .dashboard #status.success { color: #16a34a; }
+    .dashboard ul { padding-left: 20px; }
+    .dashboard li { margin-bottom: 4px; }
+    .dashboard .muted { color: #888; font-size: 0.85rem; }
+  </style>
 </head>
 <body>
   <header><h1>SEO Project</h1></header>
@@ -11,6 +63,275 @@
     <p>SEO Project starter home.</p>
     <a href="explore.html">Explore</a>
   </main>
-  <script src="app.js"></script>
+
+  <div class="dashboard">
+    <div id="status" aria-live="polite"></div>
+
+    <section class="card">
+      <h2>1. Account</h2>
+      <label for="email">Email</label>
+      <input id="email" type="email" placeholder="you@example.com" autocomplete="username" />
+
+      <label for="password">Password</label>
+      <input id="password" type="password" placeholder="••••••••" autocomplete="current-password" />
+
+      <button onclick="register()">Register</button>
+      <button onclick="login()">Login</button>
+      <p class="muted" id="authState">Not logged in.</p>
+    </section>
+
+    <section class="card">
+      <h2>2. Restaurants</h2>
+      <label for="restName">Restaurant name</label>
+      <input id="restName" type="text" placeholder="e.g. Blue Fig Cafe" />
+
+      <button onclick="addRestaurant()">Add</button>
+      <button onclick="loadRestaurants()">Load</button>
+
+      <ul id="restList"></ul>
+    </section>
+
+    <section class="card">
+      <h2>3. Rewards</h2>
+      <label for="rewardRestaurant">Restaurant</label>
+      <select id="rewardRestaurant"></select>
+
+      <label for="rewardTitle">Title</label>
+      <input id="rewardTitle" type="text" placeholder="e.g. Free coffee" />
+
+      <label for="rewardDescription">Description</label>
+      <input id="rewardDescription" type="text" placeholder="Optional details" />
+
+      <label for="rewardPoints">Points required</label>
+      <input id="rewardPoints" type="number" min="0" value="0" />
+
+      <button onclick="addReward()">Add reward</button>
+      <button onclick="loadRewards()">Load rewards</button>
+
+      <ul id="rewardList"></ul>
+    </section>
+  </div>
+
+  <script>
+    const API = "http://localhost:5000/api";
+
+    // Token lives only in memory (a plain JS variable) — cleared on page reload.
+    let accessToken = null;
+
+    // Cache of restaurant id -> name, used to label rewards on display.
+    let restaurantNames = {};
+
+    function setStatus(message, isError = false) {
+      const el = document.getElementById("status");
+      el.textContent = message;
+      el.className = isError ? "error" : "success";
+    }
+
+    function getCredentials() {
+      return {
+        email: document.getElementById("email").value.trim(),
+        password: document.getElementById("password").value,
+      };
+    }
+
+    async function register() {
+      const { email, password } = getCredentials();
+      try {
+        const res = await fetch(`${API}/auth/register`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password }),
+        });
+        const data = await res.json();
+        if (res.ok) {
+          setStatus(data.message || "Registered successfully.");
+        } else {
+          setStatus(data.error || "Registration failed.", true);
+        }
+      } catch (err) {
+        setStatus(`Network error: ${err.message}`, true);
+      }
+    }
+
+    async function login() {
+      const { email, password } = getCredentials();
+      try {
+        const res = await fetch(`${API}/auth/login`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password }),
+        });
+        const data = await res.json();
+        if (res.ok) {
+          accessToken = data.access_token;
+          document.getElementById("authState").textContent = `Logged in as ${email}.`;
+          setStatus("Logged in successfully.");
+          populateRestaurantDropdown();
+        } else {
+          setStatus(data.error || "Login failed.", true);
+        }
+      } catch (err) {
+        setStatus(`Network error: ${err.message}`, true);
+      }
+    }
+
+    async function addRestaurant() {
+      if (!accessToken) {
+        setStatus("Log in first", true);
+        return;
+      }
+      const name = document.getElementById("restName").value.trim();
+      try {
+        const res = await fetch(`${API}/restaurants/`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({ name }),
+        });
+        const data = await res.json();
+        if (res.ok) {
+          setStatus(`Added "${data.name}" (id ${data.id}).`);
+          document.getElementById("restName").value = "";
+          loadRestaurants();
+          populateRestaurantDropdown();
+        } else {
+          setStatus(data.error || "Could not add restaurant.", true);
+        }
+      } catch (err) {
+        setStatus(`Network error: ${err.message}`, true);
+      }
+    }
+
+    async function loadRestaurants() {
+      if (!accessToken) {
+        setStatus("Log in first", true);
+        return;
+      }
+      try {
+        const res = await fetch(`${API}/restaurants/`, {
+          method: "GET",
+          headers: { "Authorization": `Bearer ${accessToken}` },
+        });
+        const data = await res.json();
+        if (res.ok) {
+          const list = document.getElementById("restList");
+          list.textContent = "";
+          data.forEach((r) => {
+            const li = document.createElement("li");
+            li.textContent = `#${r.id} — ${r.name}`;
+            list.appendChild(li);
+          });
+          setStatus(`Loaded ${data.length} restaurant(s).`);
+        } else {
+          setStatus(data.error || data.msg || "Could not load restaurants.", true);
+        }
+      } catch (err) {
+        setStatus(`Network error: ${err.message}`, true);
+      }
+    }
+
+    async function populateRestaurantDropdown() {
+      if (!accessToken) {
+        setStatus("Log in first", true);
+        return;
+      }
+      try {
+        const res = await fetch(`${API}/restaurants/`, {
+          method: "GET",
+          headers: { "Authorization": `Bearer ${accessToken}` },
+        });
+        const data = await res.json();
+        if (res.ok) {
+          const select = document.getElementById("rewardRestaurant");
+          select.textContent = "";
+          restaurantNames = {};
+          data.forEach((r) => {
+            restaurantNames[r.id] = r.name;
+            const opt = document.createElement("option");
+            opt.value = r.id;
+            opt.textContent = `${r.name} (#${r.id})`;
+            select.appendChild(opt);
+          });
+        } else {
+          setStatus(data.error || data.msg || "Could not load restaurants.", true);
+        }
+      } catch (err) {
+        setStatus(`Network error: ${err.message}`, true);
+      }
+    }
+
+    async function addReward() {
+      if (!accessToken) {
+        setStatus("Log in first", true);
+        return;
+      }
+      const restaurantId = document.getElementById("rewardRestaurant").value;
+      if (!restaurantId) {
+        setStatus("Add a restaurant first, then pick one.", true);
+        return;
+      }
+      const title = document.getElementById("rewardTitle").value.trim();
+      const description = document.getElementById("rewardDescription").value.trim();
+      const pointsRaw = document.getElementById("rewardPoints").value;
+      try {
+        const res = await fetch(`${API}/rewards/`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({
+            restaurant_id: Number(restaurantId),
+            title,
+            description,
+            points_required: Number(pointsRaw) || 0,
+          }),
+        });
+        const data = await res.json();
+        if (res.ok) {
+          setStatus(`Added reward "${data.title}" (id ${data.id}).`);
+          document.getElementById("rewardTitle").value = "";
+          document.getElementById("rewardDescription").value = "";
+          document.getElementById("rewardPoints").value = "0";
+          loadRewards();
+        } else {
+          setStatus(data.error || "Could not add reward.", true);
+        }
+      } catch (err) {
+        setStatus(`Network error: ${err.message}`, true);
+      }
+    }
+
+    async function loadRewards() {
+      if (!accessToken) {
+        setStatus("Log in first", true);
+        return;
+      }
+      try {
+        const res = await fetch(`${API}/rewards/`, {
+          method: "GET",
+          headers: { "Authorization": `Bearer ${accessToken}` },
+        });
+        const data = await res.json();
+        if (res.ok) {
+          const list = document.getElementById("rewardList");
+          list.textContent = "";
+          data.forEach((r) => {
+            const restaurant = restaurantNames[r.restaurant_id] || `restaurant #${r.restaurant_id}`;
+            const li = document.createElement("li");
+            li.textContent = `${r.title} — ${r.points_required} pts — ${restaurant}`;
+            list.appendChild(li);
+          });
+          setStatus(`Loaded ${data.length} reward(s).`);
+        } else {
+          setStatus(data.error || data.msg || "Could not load rewards.", true);
+        }
+      } catch (err) {
+        setStatus(`Network error: ${err.message}`, true);
+      }
+    }
+  </script>
 </body>
 </html>
