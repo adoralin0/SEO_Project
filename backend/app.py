@@ -7,6 +7,7 @@ from config import Config
 from models import db
 from routes.auth import auth_bp
 from routes.restaurants import restaurants_bp
+from routes.rewards import rewards_bp
 
 FRONTEND = Path(__file__).resolve().parent.parent / "frontend"
 
@@ -20,6 +21,7 @@ def create_app():
 
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
     app.register_blueprint(restaurants_bp, url_prefix="/api/restaurants")
+    app.register_blueprint(rewards_bp, url_prefix="/api/rewards")
 
     @app.get("/")
     def index():
