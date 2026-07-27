@@ -4,20 +4,16 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Restaurant Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
   <style>
     :root { --gap: 12px; }
-    .page {
-      max-width: 640px;
-      margin: 40px auto;
-      padding: 0 16px;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-      line-height: 1.4;
-    }
-    h1 { font-size: 1.5rem; }
+    h1 { font-size: 1.5rem; margin: 0 0 12px; color: var(--navy); }
     section {
       border: 1px solid #e0e0e0;
-      border-radius: 8px;
+      border-radius: 12px;
       padding: 16px;
       margin-bottom: var(--gap);
       background: #fff;
@@ -26,26 +22,28 @@
     label { display: block; font-size: 0.85rem; margin-bottom: 4px; color: #555; }
     input {
       width: 100%;
-      padding: 8px;
+      padding: 10px 12px;
       margin-bottom: var(--gap);
       border: 1px solid #ccc;
-      border-radius: 6px;
+      border-radius: 10px;
       font-size: 0.95rem;
+      font-family: inherit;
     }
     button {
       padding: 8px 14px;
       border: none;
-      border-radius: 6px;
-      background: #2563eb;
+      border-radius: 8px;
+      background: var(--sage-btn);
       color: #fff;
       font-size: 0.9rem;
+      font-family: inherit;
       cursor: pointer;
       margin-right: 8px;
     }
-    button:hover { background: #1d4ed8; }
+    button:hover { background: #8a9d76; }
     button.logout {
       background: #dc2626;
-      margin-left: 8px;
+      margin-left: 0;
     }
     button.logout:hover { background: #b91c1c; }
     .auth-row {
@@ -68,28 +66,31 @@
   </style>
 </head>
 <body>
-  <div class="page">
-    <h1>Restaurant Dashboard</h1>
+  <div class="phone-shell">
+    <div class="phone-frame has-nav">
+      <div class="phone-content">
+        <h1>Restaurant Dashboard</h1>
 
-    <div id="status" aria-live="polite"></div>
-    <div class="auth-row">
-      <p class="muted" id="authState">Not logged in.</p>
-      <button type="button" class="logout" id="logoutBtn">Log out</button>
+        <div id="status" aria-live="polite"></div>
+        <div class="auth-row">
+          <p class="muted" id="authState">Not logged in.</p>
+          <button type="button" class="logout" id="logoutBtn">Log out</button>
+        </div>
+
+        <section>
+          <h2>Restaurants</h2>
+          <label for="restName">Restaurant name</label>
+          <input id="restName" type="text" placeholder="e.g. Blue Fig Cafe" />
+
+          <button type="button" onclick="addRestaurant()">Add</button>
+          <button type="button" onclick="loadRestaurants()">Load</button>
+
+          <ul id="restList"></ul>
+        </section>
+      </div>
+      <nav class="bottom-nav" aria-label="Main"></nav>
     </div>
-
-    <section>
-      <h2>Restaurants</h2>
-      <label for="restName">Restaurant name</label>
-      <input id="restName" type="text" placeholder="e.g. Blue Fig Cafe" />
-
-      <button onclick="addRestaurant()">Add</button>
-      <button onclick="loadRestaurants()">Load</button>
-
-      <ul id="restList"></ul>
-    </section>
   </div>
-
-  <nav class="bottom-nav" aria-label="Main"></nav>
   <script src="app.js"></script>
   <script>
     function accessToken() {

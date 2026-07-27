@@ -3,90 +3,237 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Login</title>
+  <title>Login | SEO Project</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
   <style>
-    :root { --gap: 12px; }
-    .page {
-      max-width: 640px;
-      margin: 40px auto;
-      padding: 0 16px;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-      line-height: 1.4;
+    :root {
+      --sage-btn-hover: #8a9d76;
+      --label: #3d5a4c;
+      --border: #d8dde3;
     }
-    h1 { font-size: 1.5rem; }
-    section {
-      border: 1px solid #e0e0e0;
-      border-radius: 8px;
-      padding: 16px;
-      margin-bottom: var(--gap);
-      background: #fff;
+
+    .brand {
+      margin: 0;
+      font-size: 1.75rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--navy);
+      line-height: 1.2;
     }
-    h2 { font-size: 1.05rem; margin: 0 0 12px; }
-    label { display: block; font-size: 0.85rem; margin-bottom: 4px; color: #555; }
-    input {
-      width: 100%;
-      padding: 8px;
-      margin-bottom: var(--gap);
-      border: 1px solid #ccc;
-      border-radius: 6px;
+
+    .tagline {
+      margin: 10px 0 48px;
       font-size: 0.95rem;
+      font-weight: 400;
+      color: var(--sage);
     }
-    button {
-      padding: 8px 14px;
-      border: none;
-      border-radius: 6px;
-      background: #2563eb;
-      color: #fff;
-      font-size: 0.9rem;
-      cursor: pointer;
-      margin-right: 8px;
-    }
-    button:hover { background: #1d4ed8; }
-    button.secondary { background: #64748b; }
-    button.secondary:hover { background: #475569; }
+
     #status {
-      min-height: 1.4em;
+      display: none;
+      min-height: 0;
       padding: 10px 12px;
-      margin-bottom: 12px;
-      font-size: 0.95rem;
-      border-radius: 6px;
-      background: #f3f4f6;
+      margin: 0 0 20px;
+      font-size: 0.85rem;
+      border-radius: 10px;
+      text-align: left;
     }
+
+    #status.visible { display: block; }
     #status.error { color: #991b1b; background: #fee2e2; }
     #status.success { color: #166534; background: #dcfce7; }
-    .muted { color: #888; font-size: 0.85rem; }
+
+    .auth-form {
+      text-align: left;
+      width: 100%;
+    }
+
+    .field {
+      margin-bottom: 24px;
+    }
+
+    .field label {
+      display: block;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--label);
+      margin-bottom: 8px;
+    }
+
+    .field input {
+      width: 100%;
+      padding: 14px 16px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      font-family: inherit;
+      font-size: 0.95rem;
+      color: var(--navy);
+      background: #fff;
+      outline: none;
+    }
+
+    .field input::placeholder {
+      color: #b0b8c0;
+    }
+
+    .field input:focus {
+      border-color: var(--sage-btn);
+    }
+
+    .password-wrap {
+      position: relative;
+    }
+
+    .password-wrap input {
+      padding-right: 48px;
+    }
+
+    .toggle-password {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      border: none;
+      background: transparent;
+      padding: 4px;
+      cursor: pointer;
+      color: #9aa3ad;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .toggle-password:hover {
+      color: var(--navy);
+    }
+
+    .toggle-password svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    .btn-login {
+      width: 100%;
+      margin-top: 8px;
+      padding: 14px 16px;
+      border: none;
+      border-radius: 12px;
+      background: var(--sage-btn);
+      color: #fff;
+      font-family: inherit;
+      font-size: 1.05rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .btn-login:hover {
+      background: var(--sage-btn-hover);
+    }
+
+    .signup-row {
+      margin: 36px 0 0;
+      font-size: 0.9rem;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .signup-row button {
+      border: none;
+      background: none;
+      padding: 0;
+      font-family: inherit;
+      font-size: inherit;
+      font-weight: 600;
+      color: var(--sage);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      cursor: pointer;
+    }
+
+    .signup-row button:hover {
+      color: var(--sage-btn-hover);
+    }
   </style>
 </head>
 <body>
-  <div class="page">
-    <h1>Login</h1>
+  <div class="phone-shell">
+    <div class="phone-frame">
+      <div class="phone-content centered">
+        <h1 class="brand">SEO Project</h1>
+        <p class="tagline">Earn rewards with every bite</p>
 
-    <div id="status" aria-live="polite">Register an account, then log in.</div>
+        <div id="status" aria-live="polite"></div>
 
-    <section>
-      <h2>Account</h2>
-      <form id="authForm">
-        <label for="email">Email</label>
-        <input id="email" name="email" type="email" placeholder="you@example.com" autocomplete="username" required />
+        <form id="authForm" class="auth-form">
+          <div class="field">
+            <label for="email">Email address</label>
+            <input id="email" name="email" type="email" placeholder="you@example.com" autocomplete="username" required />
+          </div>
 
-        <label for="password">Password</label>
-        <input id="password" name="password" type="password" placeholder="••••••••" autocomplete="current-password" required />
+          <div class="field">
+            <label for="password">Password</label>
+            <div class="password-wrap">
+              <input id="password" name="password" type="password" placeholder="••••••••" autocomplete="current-password" required />
+              <button type="button" class="toggle-password" id="togglePassword" aria-label="Show password">
+                <svg id="eyeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+              </button>
+            </div>
+          </div>
 
-        <button type="button" id="registerBtn">Register</button>
-        <button type="submit" id="loginBtn">Login</button>
-      </form>
-      <p class="muted" id="authState">Not logged in.</p>
-    </section>
+          <button type="submit" class="btn-login" id="submitBtn">Login</button>
+        </form>
+
+        <p class="signup-row" id="switchRow">
+          <span id="switchText">Don't have an account?</span>
+          <button type="button" id="switchBtn">Sign up</button>
+        </p>
+      </div>
+    </div>
   </div>
 
-  <nav class="bottom-nav" aria-label="Main"></nav>
   <script src="app.js"></script>
   <script>
+    let mode = "login";
+
     function setStatus(message, isError = false) {
       const el = document.getElementById("status");
       el.textContent = message;
-      el.className = isError ? "error" : "success";
+      el.className = isError ? "error visible" : "success visible";
+    }
+
+    function clearStatus() {
+      const el = document.getElementById("status");
+      el.textContent = "";
+      el.className = "";
+    }
+
+    function setMode(next) {
+      mode = next;
+      clearStatus();
+      const submitBtn = document.getElementById("submitBtn");
+      const switchText = document.getElementById("switchText");
+      const switchBtn = document.getElementById("switchBtn");
+      const password = document.getElementById("password");
+
+      if (mode === "signup") {
+        submitBtn.textContent = "Create account";
+        switchText.textContent = "Already have an account?";
+        switchBtn.textContent = "Log in";
+        password.autocomplete = "new-password";
+      } else {
+        submitBtn.textContent = "Login";
+        switchText.textContent = "Don't have an account?";
+        switchBtn.textContent = "Sign up";
+        password.autocomplete = "current-password";
+      }
     }
 
     function getCredentials() {
@@ -96,69 +243,73 @@
       };
     }
 
-    function showAuthState() {
-      const email = localStorage.getItem("email");
-      document.getElementById("authState").textContent =
-        isLoggedIn() && email ? `Logged in as ${email}.` : "Not logged in.";
+    async function loginWithCredentials(email, password) {
+      const res = await fetch(`${API}/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.access_token) {
+        throw new Error(data.error || "Login failed.");
+      }
+      localStorage.setItem("accessToken", data.access_token);
+      localStorage.setItem("email", email);
+      setupBottomNav();
+      window.location.assign("index.html");
     }
 
-    async function handleRegister() {
+    async function handleSubmit(event) {
+      event.preventDefault();
       const { email, password } = getCredentials();
       if (!email || !password) {
         setStatus("Enter an email and password first.", true);
         return;
       }
-      setStatus("Registering…");
-      try {
-        const res = await fetch(`${API}/auth/register`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password }),
-        });
-        const data = await res.json().catch(() => ({}));
-        if (res.ok) {
-          setStatus("Registered! Now click Login.");
-        } else {
-          setStatus(data.error || "Registration failed.", true);
+
+      if (mode === "signup") {
+        setStatus("Creating your account…");
+        try {
+          const res = await fetch(`${API}/auth/register`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password }),
+          });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) {
+            setStatus(data.error || "Could not create account.", true);
+            return;
+          }
+          setStatus("Account created! Signing you in…");
+          await loginWithCredentials(email, password);
+        } catch (err) {
+          setStatus(`Network error: ${err.message}`, true);
         }
-      } catch (err) {
-        setStatus(`Network error: ${err.message}`, true);
-      }
-    }
-
-    async function handleLogin(event) {
-      if (event) event.preventDefault();
-      const { email, password } = getCredentials();
-      if (!email || !password) {
-        setStatus("Enter an email and password first.", true);
         return;
       }
+
       setStatus("Logging in…");
       try {
-        const res = await fetch(`${API}/auth/login`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password }),
-        });
-        const data = await res.json().catch(() => ({}));
-        if (res.ok && data.access_token) {
-          localStorage.setItem("accessToken", data.access_token);
-          localStorage.setItem("email", email);
-          showAuthState();
-          setStatus("Logged in! Redirecting…");
-          setupBottomNav();
-          window.location.assign("index.html");
-        } else {
-          setStatus(data.error || "Invalid email or password. Register first if you are new.", true);
-        }
+        await loginWithCredentials(email, password);
       } catch (err) {
-        setStatus(`Network error: ${err.message}`, true);
+        setStatus(err.message || "Invalid email or password.", true);
       }
     }
 
-    document.getElementById("registerBtn").addEventListener("click", handleRegister);
-    document.getElementById("authForm").addEventListener("submit", handleLogin);
-    showAuthState();
+    document.getElementById("switchBtn").addEventListener("click", () => {
+      setMode(mode === "login" ? "signup" : "login");
+    });
+    document.getElementById("authForm").addEventListener("submit", handleSubmit);
+
+    document.getElementById("togglePassword").addEventListener("click", () => {
+      const input = document.getElementById("password");
+      const showing = input.type === "text";
+      input.type = showing ? "password" : "text";
+      document.getElementById("togglePassword").setAttribute(
+        "aria-label",
+        showing ? "Show password" : "Hide password"
+      );
+    });
   </script>
 </body>
 </html>

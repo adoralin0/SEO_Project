@@ -15,13 +15,15 @@ function setupBottomNav() {
   if (!nav) return;
 
   const page = currentPage();
+  const frame = document.querySelector(".phone-frame");
 
   if (!isLoggedIn()) {
-    nav.innerHTML = `
-      <a href="login.html" class="active">Login</a>
-    `;
+    nav.innerHTML = "";
+    if (frame) frame.classList.remove("has-nav");
     return;
   }
+
+  if (frame) frame.classList.add("has-nav");
 
   const links = [
     { href: "index.html", label: "Home", match: ["index.html"] },
