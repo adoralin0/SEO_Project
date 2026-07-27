@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    :root { --gap: 12px; }
+    .page {
+      max-width: 640px;
+      margin: 40px auto;
+      padding: 0 16px;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      line-height: 1.4;
+    }
+    h1 { font-size: 1.5rem; }
+    section {
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: var(--gap);
+      background: #fff;
+    }
+    h2 { font-size: 1.05rem; margin: 0 0 12px; }
+    label { display: block; font-size: 0.85rem; margin-bottom: 4px; color: #555; }
+    input {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: var(--gap);
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 0.95rem;
+    }
+    button {
+      padding: 8px 14px;
+      border: none;
+      border-radius: 6px;
+      background: #2563eb;
+      color: #fff;
+      font-size: 0.9rem;
+      cursor: pointer;
+      margin-right: 8px;
+    }
+    button:hover { background: #1d4ed8; }
+    button.secondary { background: #64748b; }
+    button.secondary:hover { background: #475569; }
+    #status {
+      min-height: 1.4em;
+      padding: 10px 12px;
+      margin-bottom: 12px;
+      font-size: 0.95rem;
+      border-radius: 6px;
+      background: #f3f4f6;
+    }
+    #status.error { color: #991b1b; background: #fee2e2; }
+    #status.success { color: #166534; background: #dcfce7; }
+    .muted { color: #888; font-size: 0.85rem; }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <h1>Login</h1>
+
+    <div id="status" aria-live="polite">Register an account, then log in.</div>
+
+    <section>
+      <h2>Account</h2>
+      <form id="authForm">
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" placeholder="you@example.com" autocomplete="username" required />
+
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" placeholder="••••••••" autocomplete="current-password" required />
+
+        <button type="button" id="registerBtn">Register</button>
+        <button type="submit" id="loginBtn">Login</button>
+      </form>
+      <p class="muted" id="authState">Not logged in.</p>
+    </section>
+  </div>
+
+  <nav class="bottom-nav" aria-label="Main"></nav>
+  <script src="app.js"></script>
+  <script>
+    function setStatus(message, isError = false) {
+      const el = document.getElementById("status");
+      el.textContent = message;
+      el.className = isError ? "error" : "success";
+    }
+
+    function getCredentials() {
+      return {
+        email: document.getElementById("email").value.trim(),
+        password: document.getElementById("password").value,
+      };
+    }
+
+    function showAuthState() {
+      const email = localStorage.getItem("email");
+      document.getElementById("authState").textContent =
+        isLoggedIn() && email ? `Logged in as ${email}.` : "Not logged in.";
+    }
+
+    async function handleRegister() {
+      const { email, password } = getCredentials();
+      if (!email || !password) {
+        setStatus("Enter an email and password first.", true);
+        return;
+      }
+      setStatus("Registering…");
+      try {
+        const res = await fetch(`${API}/auth/register`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok) {
+          setStatus("Registered! Now click Login.");
+        } else {
+          setStatus(data.error || "Registration failed.", true);
+        }
+      } catch (err) {
+        setStatus(`Network error: ${err.message}`, true);
+      }
+    }
+
+    async function handleLogin(event) {
+      if (event) event.preventDefault();
+      const { email, password } = getCredentials();
+      if (!email || !password) {
+        setStatus("Enter an email and password first.", true);
+        return;
+      }
+      setStatus("Logging in…");
+      try {
+        const res = await fetch(`${API}/auth/login`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok && data.access_token) {
+          localStorage.setItem("accessToken", data.access_token);
+          localStorage.setItem("email", email);
+          showAuthState();
+          setStatus("Logged in! Redirecting…");
+          setupBottomNav();
+          window.location.assign("index.html");
+        } else {
+          setStatus(data.error || "Invalid email or password. Register first if you are new.", true);
+        }
+      } catch (err) {
+        setStatus(`Network error: ${err.message}`, true);
+      }
+    }
+
+    document.getElementById("registerBtn").addEventListener("click", handleRegister);
+    document.getElementById("authForm").addEventListener("submit", handleLogin);
+    showAuthState();
+  </script>
+</body>
+</html>

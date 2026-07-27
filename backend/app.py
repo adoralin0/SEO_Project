@@ -23,7 +23,7 @@ def create_app():
 
     @app.get("/")
     def index():
-        return send_from_directory(FRONTEND, "index.html")
+        return send_from_directory(FRONTEND, "login.html")
 
     @app.get("/<path:path>")
     def frontend(path):

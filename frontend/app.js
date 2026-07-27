@@ -1,4 +1,49 @@
-const API = "http://localhost:5000/api";
+const API = "/api";
 
-// Placeholder — wire login token + GET /restaurants later
-console.log("SEO Project frontend ready", API);
+function isLoggedIn() {
+  return Boolean(localStorage.getItem("accessToken"));
+}
+
+function currentPage() {
+  const file = location.pathname.split("/").pop();
+  // "/" is served as the login page
+  return file || "login.html";
+}
+
+function setupBottomNav() {
+  const nav = document.querySelector(".bottom-nav");
+  if (!nav) return;
+
+  const page = currentPage();
+
+  if (!isLoggedIn()) {
+    nav.innerHTML = `
+      <a href="login.html" class="active">Login</a>
+    `;
+    return;
+  }
+
+  const links = [
+    { href: "index.html", label: "Home", match: ["index.html"] },
+    { href: "explore.html", label: "Explore", match: ["explore.html"] },
+    { href: "dashboard.html", label: "Dashboard", match: ["dashboard.html"] },
+  ];
+
+  nav.innerHTML = links
+    .map(
+      (link) =>
+        `<a href="${link.href}" class="${link.match.includes(page) ? "active" : ""}">${link.label}</a>`
+    )
+    .join("");
+}
+
+function requireAuth() {
+  const page = currentPage();
+  if (page === "login.html") return;
+  if (!isLoggedIn()) {
+    location.replace("login.html");
+  }
+}
+
+requireAuth();
+setupBottomNav();
