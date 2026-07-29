@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Restaurant Dashboard</title>
+  <title>Dashboard | Loyable</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -70,12 +70,12 @@
     <div class="phone-frame has-nav">
       <div class="phone-content">
         <h1>Restaurant Dashboard</h1>
+        <p class="page-copy" style="margin-bottom: 16px;">
+          <a href="profile.html" style="color: var(--sage-btn); text-decoration: none; font-weight: 600;">← Back to profile</a>
+        </p>
 
         <div id="status" aria-live="polite"></div>
-        <div class="auth-row">
-          <p class="muted" id="authState">Not logged in.</p>
-          <button type="button" class="logout" id="logoutBtn">Log out</button>
-        </div>
+        <p class="muted" id="authState" style="margin-bottom: 12px;">Not logged in.</p>
 
         <section>
           <h2>Restaurants</h2>
@@ -108,16 +108,8 @@
       document.getElementById("authState").textContent =
         accessToken() && email
           ? `Logged in as ${email}.`
-          : "Not logged in. Go to Login first.";
+          : "Not logged in.";
     }
-
-    function logout() {
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("email");
-      window.location.assign("login.html");
-    }
-
-    document.getElementById("logoutBtn").addEventListener("click", logout);
 
     async function addRestaurant() {
       if (!accessToken()) {

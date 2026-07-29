@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Profile | Loyable</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    .profile-card {
+      border: 1px solid #e5ebef;
+      border-radius: 16px;
+      padding: 20px;
+      margin: 20px 0;
+      text-align: left;
+      background: #fafbfc;
+    }
+
+    .profile-label {
+      margin: 0 0 4px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .profile-email {
+      margin: 0;
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--navy);
+      word-break: break-all;
+    }
+
+    .owner-btn {
+      display: block;
+      width: 100%;
+      margin-top: 8px;
+      padding: 14px 16px;
+      border: none;
+      border-radius: 12px;
+      background: var(--sage-btn);
+      color: #fff;
+      font-family: inherit;
+      font-size: 1rem;
+      font-weight: 600;
+      text-align: center;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .owner-btn:hover {
+      background: #8a9d76;
+      color: #fff;
+    }
+
+    .logout-btn {
+      display: block;
+      width: 100%;
+      margin-top: 12px;
+      padding: 12px 16px;
+      border: 1px solid #e5ebef;
+      border-radius: 12px;
+      background: #fff;
+      color: #b91c1c;
+      font-family: inherit;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .logout-btn:hover {
+      background: #fef2f2;
+    }
+  </style>
+</head>
+<body>
+  <div class="phone-shell">
+    <div class="phone-frame has-nav">
+      <div class="phone-content">
+        <h1 class="page-title">Profile</h1>
+
+        <div class="profile-card">
+          <p class="profile-label">Email</p>
+          <p class="profile-email" id="profileEmail">—</p>
+        </div>
+
+        <a class="owner-btn" href="dashboard.html">Are you a restaurant owner?</a>
+        <button type="button" class="logout-btn" id="logoutBtn">Log out</button>
+      </div>
+      <nav class="bottom-nav" aria-label="Main"></nav>
+    </div>
+  </div>
+  <script src="app.js"></script>
+  <script>
+    document.getElementById("profileEmail").textContent =
+      localStorage.getItem("email") || "Not signed in";
+
+    document.getElementById("logoutBtn").addEventListener("click", () => {
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("email");
+      window.location.assign("login.html");
+    });
+  </script>
+</body>
+</html>

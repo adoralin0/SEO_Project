@@ -1,4 +1,4 @@
-# SEO Project — Bare Bones Starter (temporary)
+# Loyable — local restaurant rewards
 
 Flask + static frontend skeleton for Week 4 rubric setup.
 
