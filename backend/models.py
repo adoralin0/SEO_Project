@@ -3,6 +3,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 db = SQLAlchemy()
 
+
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True, nullable=False)
@@ -14,7 +15,20 @@ class User(db.Model):
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
 
+
 class Restaurant(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120), nullable=False)
+    address = db.Column(db.String(255), nullable=True)
+    lat = db.Column(db.Float, nullable=True)
+    lng = db.Column(db.Float, nullable=True)
     owner_id = db.Column(db.Integer, db.ForeignKey("user.id"))
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "address": self.address,
+            "lat": self.lat,
+            "lng": self.lng,
+        }

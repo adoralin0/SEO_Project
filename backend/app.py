@@ -31,8 +31,33 @@ def create_app():
 
     with app.app_context():
         db.create_all()
+        _ensure_restaurant_location_columns()
 
     return app
+
+
+def _ensure_restaurant_location_columns():
+    """Add address/lat/lng columns on existing SQLite DBs."""
+    from sqlalchemy import inspect, text
+
+    inspector = inspect(db.engine)
+    if "restaurant" not in inspector.get_table_names():
+        return
+
+    with db.engine.connect() as conn:
+        rows = conn.execute(text("PRAGMA table_info(restaurant)")).fetchall()
+        cols = {row[1] for row in rows}
+        alterations = []
+        if "address" not in cols:
+            alterations.append("ALTER TABLE restaurant ADD COLUMN address VARCHAR(255)")
+        if "lat" not in cols:
+            alterations.append("ALTER TABLE restaurant ADD COLUMN lat FLOAT")
+        if "lng" not in cols:
+            alterations.append("ALTER TABLE restaurant ADD COLUMN lng FLOAT")
+        for stmt in alterations:
+            conn.execute(text(stmt))
+        if alterations:
+            conn.commit()
 
 
 if __name__ == "__main__":

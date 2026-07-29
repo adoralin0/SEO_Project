@@ -39,20 +39,9 @@
       font-family: inherit;
       cursor: pointer;
       margin-right: 8px;
+      margin-bottom: 8px;
     }
     button:hover { background: #8a9d76; }
-    button.logout {
-      background: #dc2626;
-      margin-left: 0;
-    }
-    button.logout:hover { background: #b91c1c; }
-    .auth-row {
-      display: flex;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-bottom: 12px;
-    }
     #status {
       min-height: 1.4em;
       padding: 8px 0;
@@ -60,9 +49,71 @@
     }
     #status.error { color: #dc2626; }
     #status.success { color: #16a34a; }
-    ul { padding-left: 20px; }
-    li { margin-bottom: 4px; }
+    #restList {
+      list-style: none;
+      padding: 0;
+      margin: 12px 0 0;
+    }
+    #restList li {
+      border: 1px solid #e5ebef;
+      border-radius: 10px;
+      padding: 10px 12px;
+      margin-bottom: 8px;
+    }
+    #restList li strong { display: block; color: var(--navy); margin-bottom: 2px; }
+    #restList li span { font-size: 0.85rem; color: #888; }
     .muted { color: #888; font-size: 0.85rem; margin: 0; }
+    .hint { font-size: 0.8rem; color: #888; margin: -4px 0 12px; }
+
+    .address-wrap {
+      position: relative;
+      margin-bottom: var(--gap);
+    }
+
+    .address-wrap input {
+      margin-bottom: 0;
+    }
+
+    .suggest-list {
+      list-style: none;
+      margin: 4px 0 0;
+      padding: 0;
+      border: 1px solid #d8dde3;
+      border-radius: 10px;
+      background: #fff;
+      max-height: 180px;
+      overflow-y: auto;
+      box-shadow: 0 8px 20px rgba(30, 58, 95, 0.08);
+      z-index: 5;
+      position: absolute;
+      left: 0;
+      right: 0;
+    }
+
+    .suggest-list[hidden] {
+      display: none;
+    }
+
+    .suggest-list li {
+      border: none;
+      border-radius: 0;
+      margin: 0;
+      padding: 10px 12px;
+      font-size: 0.85rem;
+      color: var(--navy);
+      cursor: pointer;
+      line-height: 1.35;
+      text-align: left;
+    }
+
+    .suggest-list li:hover,
+    .suggest-list li.active {
+      background: #f6f9f4;
+    }
+
+    .suggest-list li + li {
+      border-top: 1px solid #eef1f4;
+    }
   </style>
 </head>
 <body>
@@ -78,13 +129,26 @@
         <p class="muted" id="authState" style="margin-bottom: 12px;">Not logged in.</p>
 
         <section>
-          <h2>Restaurants</h2>
+          <h2>Add restaurant</h2>
           <label for="restName">Restaurant name</label>
           <input id="restName" type="text" placeholder="e.g. Blue Fig Cafe" />
 
-          <button type="button" onclick="addRestaurant()">Add</button>
-          <button type="button" onclick="loadRestaurants()">Load</button>
+          <label for="restAddress">Address</label>
+          <div class="address-wrap">
+            <input id="restAddress" type="text" placeholder="Start typing an address…" autocomplete="off" />
+            <ul class="suggest-list" id="suggestList" hidden></ul>
+          </div>
+          <p class="hint">Suggestions appear as you type. Pick one so it maps correctly.</p>
 
+          <button type="button" id="addBtn">Add</button>
+        </section>
+
+        <section>
+          <h2>Find your restaurants</h2>
+          <label for="searchQuery">Search by name or address</label>
+          <input id="searchQuery" type="search" placeholder="Search…" />
+          <button type="button" id="searchBtn">Search</button>
+          <button type="button" id="loadBtn">Show all</button>
           <ul id="restList"></ul>
         </section>
       </div>
@@ -93,6 +157,11 @@
   </div>
   <script src="app.js"></script>
   <script>
+    let selectedLat = null;
+    let selectedLng = null;
+    let suggestTimer = null;
+    let activeSuggestIndex = -1;
+
     function accessToken() {
       return localStorage.getItem("accessToken");
     }
@@ -111,25 +180,112 @@
           : "Not logged in.";
     }
 
+    function hideSuggestions() {
+      const list = document.getElementById("suggestList");
+      list.innerHTML = "";
+      list.hidden = true;
+      activeSuggestIndex = -1;
+    }
+
+    function applySuggestion(item) {
+      document.getElementById("restAddress").value = item.label;
+      selectedLat = item.lat;
+      selectedLng = item.lng;
+      hideSuggestions();
+    }
+
+    function renderSuggestions(items) {
+      const list = document.getElementById("suggestList");
+      list.innerHTML = "";
+      activeSuggestIndex = -1;
+      if (!items.length) {
+        list.hidden = true;
+        return;
+      }
+      items.forEach((item, index) => {
+        const li = document.createElement("li");
+        li.textContent = item.label;
+        li.addEventListener("mousedown", (e) => {
+          e.preventDefault();
+          applySuggestion(item);
+        });
+        li.dataset.index = String(index);
+        list.appendChild(li);
+      });
+      list._items = items;
+      list.hidden = false;
+    }
+
+    async function fetchSuggestions(query) {
+      if (!accessToken() || query.trim().length < 3) {
+        hideSuggestions();
+        return;
+      }
+      try {
+        const res = await fetch(
+          `${API}/restaurants/address-suggest?q=${encodeURIComponent(query.trim())}`,
+          { headers: { Authorization: `Bearer ${accessToken()}` } }
+        );
+        const data = await res.json().catch(() => []);
+        if (!res.ok) {
+          hideSuggestions();
+          return;
+        }
+        renderSuggestions(data);
+      } catch {
+        hideSuggestions();
+      }
+    }
+
+    function renderList(data) {
+      const list = document.getElementById("restList");
+      list.textContent = "";
+      data.forEach((r) => {
+        const li = document.createElement("li");
+        const title = document.createElement("strong");
+        title.textContent = r.name;
+        const addr = document.createElement("span");
+        addr.textContent = r.address || "No address";
+        li.appendChild(title);
+        li.appendChild(addr);
+        list.appendChild(li);
+      });
+    }
+
     async function addRestaurant() {
       if (!accessToken()) {
         setStatus("Log in first", true);
         return;
       }
       const name = document.getElementById("restName").value.trim();
+      const address = document.getElementById("restAddress").value.trim();
+      if (!name || !address) {
+        setStatus("Name and address are required.", true);
+        return;
+      }
+      setStatus("Saving restaurant…");
       try {
+        const body = { name, address };
+        if (selectedLat != null && selectedLng != null) {
+          body.lat = selectedLat;
+          body.lng = selectedLng;
+        }
         const res = await fetch(`${API}/restaurants/`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             "Authorization": `Bearer ${accessToken()}`,
           },
-          body: JSON.stringify({ name }),
+          body: JSON.stringify(body),
         });
-        const data = await res.json();
+        const data = await res.json().catch(() => ({}));
         if (res.ok) {
-          setStatus(`Added "${data.name}" (id ${data.id}).`);
+          setStatus(`Added "${data.name}" at ${data.address}.`);
           document.getElementById("restName").value = "";
+          document.getElementById("restAddress").value = "";
+          selectedLat = null;
+          selectedLng = null;
+          hideSuggestions();
           loadRestaurants();
         } else {
           setStatus(data.error || "Could not add restaurant.", true);
@@ -139,26 +295,27 @@
       }
     }
 
-    async function loadRestaurants() {
+    async function loadRestaurants(query = "") {
       if (!accessToken()) {
         setStatus("Log in first", true);
         return;
       }
       try {
-        const res = await fetch(`${API}/restaurants/`, {
+        const url = query
+          ? `${API}/restaurants/?q=${encodeURIComponent(query)}`
+          : `${API}/restaurants/`;
+        const res = await fetch(url, {
           method: "GET",
           headers: { "Authorization": `Bearer ${accessToken()}` },
         });
-        const data = await res.json();
+        const data = await res.json().catch(() => []);
         if (res.ok) {
-          const list = document.getElementById("restList");
-          list.textContent = "";
-          data.forEach((r) => {
-            const li = document.createElement("li");
-            li.textContent = `#${r.id} — ${r.name}`;
-            list.appendChild(li);
-          });
-          setStatus(`Loaded ${data.length} restaurant(s).`);
+          renderList(data);
+          setStatus(
+            query
+              ? `Found ${data.length} match${data.length === 1 ? "" : "es"}.`
+              : `Loaded ${data.length} restaurant(s).`
+          );
         } else {
           setStatus(data.error || data.msg || "Could not load restaurants.", true);
         }
@@ -167,7 +324,67 @@
       }
     }
 
+    const addressInput = document.getElementById("restAddress");
+    addressInput.addEventListener("input", () => {
+      selectedLat = null;
+      selectedLng = null;
+      const query = addressInput.value;
+      clearTimeout(suggestTimer);
+      if (query.trim().length < 3) {
+        hideSuggestions();
+        return;
+      }
+      suggestTimer = setTimeout(() => fetchSuggestions(query), 350);
+    });
+
+    addressInput.addEventListener("keydown", (e) => {
+      const list = document.getElementById("suggestList");
+      const items = list._items || [];
+      if (list.hidden || !items.length) return;
+
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        activeSuggestIndex = Math.min(activeSuggestIndex + 1, items.length - 1);
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        activeSuggestIndex = Math.max(activeSuggestIndex - 1, 0);
+      } else if (e.key === "Enter" && activeSuggestIndex >= 0) {
+        e.preventDefault();
+        applySuggestion(items[activeSuggestIndex]);
+        return;
+      } else if (e.key === "Escape") {
+        hideSuggestions();
+        return;
+      } else {
+        return;
+      }
+
+      [...list.children].forEach((li, i) => {
+        li.classList.toggle("active", i === activeSuggestIndex);
+      });
+    });
+
+    addressInput.addEventListener("blur", () => {
+      setTimeout(hideSuggestions, 150);
+    });
+
+    document.getElementById("addBtn").addEventListener("click", addRestaurant);
+    document.getElementById("loadBtn").addEventListener("click", () => {
+      document.getElementById("searchQuery").value = "";
+      loadRestaurants();
+    });
+    document.getElementById("searchBtn").addEventListener("click", () => {
+      loadRestaurants(document.getElementById("searchQuery").value.trim());
+    });
+    document.getElementById("searchQuery").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        loadRestaurants(document.getElementById("searchQuery").value.trim());
+      }
+    });
+
     showAuthState();
+    if (accessToken()) loadRestaurants();
   </script>
 </body>
 </html>
