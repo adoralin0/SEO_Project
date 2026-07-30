@@ -1,5 +1,6 @@
 # Python
 venv/
+seo-env/
 __pycache__/
 *.pyc
 
