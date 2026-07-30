@@ -45,6 +45,8 @@
   <script>
     let trackedRestaurants = readPointsMap();
     let claimedRewards = readRewardsMap();
+    let liveRestaurants = {}; // name -> { id, name }
+    let liveSynced = false;
     let expandedRestaurant = null;
     let searchTerm = "";
 
@@ -63,6 +65,44 @@
         addTotalPoints(sum);
       }
       writeNavState({ earnedPoints: null, earnedProcessed: true });
+    }
+
+    function pruneStaleRestaurants(aliveNames) {
+      const alive = new Set(aliveNames);
+
+      const nextTracked = {};
+      Object.keys(trackedRestaurants).forEach((name) => {
+        if (alive.has(name)) nextTracked[name] = trackedRestaurants[name];
+      });
+      trackedRestaurants = nextTracked;
+      writePointsMap(trackedRestaurants);
+
+      const nextRewards = {};
+      Object.entries(claimedRewards).forEach(([name, list]) => {
+        if (alive.has(name)) nextRewards[name] = list;
+      });
+      claimedRewards = nextRewards;
+      writeRewardsMap(claimedRewards);
+    }
+
+    async function syncLiveRestaurants() {
+      const token = localStorage.getItem("accessToken");
+      if (!token) return;
+      try {
+        const res = await fetch(`${API}/restaurants/discover`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        liveRestaurants = {};
+        (data || []).forEach((r) => {
+          liveRestaurants[r.name] = { id: r.id, name: r.name };
+        });
+        liveSynced = true;
+        pruneStaleRestaurants(Object.keys(liveRestaurants));
+      } catch (_) {
+        /* keep local list if offline */
+      }
     }
 
     function rewardTiles() {
@@ -94,9 +134,10 @@
     }
 
     function openRewardQr(restaurantName, reward) {
+      const live = liveRestaurants[restaurantName];
       const pending = {
         restaurantName,
-        restaurantId: reward.restaurantId,
+        restaurantId: reward.restaurantId || (live && live.id),
         menuItemId: reward.menuItemId,
         points: reward.points,
         rewardId: reward.id,
@@ -105,6 +146,26 @@
       localStorage.setItem("loyablePendingClaim", JSON.stringify(pending));
       writeNavState({ ...pending, pendingClaim: true });
       location.assign("reward-qr.html");
+    }
+
+    function restaurantNamesToShow() {
+      if (liveSynced) {
+        return Object.keys(liveRestaurants)
+          .filter(
+            (n) =>
+              trackedRestaurants[n] !== undefined ||
+              (claimedRewards[n] || []).length > 0
+          )
+          .sort();
+      }
+      return [
+        ...new Set([
+          ...Object.keys(trackedRestaurants),
+          ...Object.keys(claimedRewards).filter(
+            (n) => (claimedRewards[n] || []).length > 0
+          ),
+        ]),
+      ].sort();
     }
 
     function render() {
@@ -146,10 +207,8 @@
       }
 
       const by = document.getElementById("byRestaurant");
-      const rewardNames = Object.keys(claimedRewards).filter(
-        (n) => (claimedRewards[n] || []).length > 0
-      );
-      const names = [...new Set([...Object.keys(trackedRestaurants), ...rewardNames])].sort();
+      const names = restaurantNamesToShow();
+
       if (names.length === 0) {
         by.innerHTML = `
           <div class="empty-box">
@@ -163,6 +222,7 @@
       names.forEach((restaurantName) => {
         const open = expandedRestaurant === restaurantName;
         const claimed = claimedRewards[restaurantName] || [];
+        const live = liveRestaurants[restaurantName];
         const card = document.createElement("div");
         card.className = "rest-card";
         card.innerHTML = `
@@ -218,11 +278,18 @@
 
         card.querySelector(".btn-use").addEventListener("click", (e) => {
           e.stopPropagation();
-          writeNavState({ restaurantName, redeemPoints: true });
+          writeNavState({
+            restaurantName,
+            restaurantId: live ? live.id : null,
+            redeemPoints: true,
+          });
         });
         card.querySelector(".btn-get").addEventListener("click", (e) => {
           e.stopPropagation();
-          writeNavState({ restaurantName });
+          writeNavState({
+            restaurantName,
+            restaurantId: live ? live.id : null,
+          });
         });
 
         by.appendChild(card);
@@ -249,6 +316,7 @@
     trackedRestaurants = readPointsMap();
     claimedRewards = readRewardsMap();
     render();
+    syncLiveRestaurants().then(() => render());
   </script>
 </body>
 </html>

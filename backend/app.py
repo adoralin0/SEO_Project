@@ -34,7 +34,6 @@ def create_app():
         db.create_all()
         _ensure_restaurant_location_columns()
         _ensure_restaurant_image_column()
-        _seed_missing_menus()
         _reassign_demo_redemptions()
 
     return app
@@ -76,14 +75,6 @@ def _ensure_restaurant_image_column():
         if "image_url" not in cols:
             conn.execute(text("ALTER TABLE restaurant ADD COLUMN image_url VARCHAR(500)"))
             conn.commit()
-
-
-def _seed_missing_menus():
-    from models import Restaurant
-    from menu_seed import seed_default_menu
-
-    for r in Restaurant.query.filter(Restaurant.owner_id.isnot(None)).all():
-        seed_default_menu(r)
 
 
 def _reassign_demo_redemptions():

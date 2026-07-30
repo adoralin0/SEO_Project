@@ -2,7 +2,6 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from models import db, Restaurant, MenuItem, Redemption, User
 from geocode import geocode_address, suggest_addresses
-from menu_seed import seed_default_menu
 
 restaurants_bp = Blueprint("restaurants", __name__)
 
@@ -112,7 +111,6 @@ def create_restaurant():
     )
     db.session.add(r)
     db.session.commit()
-    seed_default_menu(r)
     return jsonify(r.to_dict()), 201
 
 
@@ -150,7 +148,6 @@ def menu_by_name():
         )
     if not r:
         return jsonify({"error": "Restaurant not found"}), 404
-    seed_default_menu(r)
     items = MenuItem.query.filter_by(restaurant_id=r.id).order_by(MenuItem.points_cost).all()
     return jsonify({"restaurant": r.to_dict(), "items": [i.to_dict() for i in items]})
 
@@ -161,7 +158,6 @@ def list_menu(restaurant_id):
     r = Restaurant.query.get(restaurant_id)
     if not r:
         return jsonify({"error": "Restaurant not found"}), 404
-    seed_default_menu(r)
     items = MenuItem.query.filter_by(restaurant_id=r.id).order_by(MenuItem.points_cost).all()
     return jsonify([i.to_dict() for i in items])
 
