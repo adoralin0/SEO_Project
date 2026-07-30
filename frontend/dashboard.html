@@ -9,110 +9,130 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
   <style>
-    :root { --gap: 12px; }
-    h1 { font-size: 1.5rem; margin: 0 0 12px; color: var(--navy); }
-    section {
-      border: 1px solid #e0e0e0;
-      border-radius: 12px;
-      padding: 16px;
-      margin-bottom: var(--gap);
-      background: #fff;
+    .back-link {
+      display: inline-block;
+      margin-bottom: 16px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      text-decoration: none;
+      color: var(--muted);
     }
-    h2 { font-size: 1.05rem; margin: 0 0 12px; }
-    label { display: block; font-size: 0.85rem; margin-bottom: 4px; color: #555; }
-    input {
+
+    .back-link:hover {
+      color: var(--navy);
+    }
+
+    .dash-card {
+      border: 1px solid #e5ebef;
+      border-radius: 16px;
+      padding: 20px;
+      margin: 16px 0;
+      background: #fafbfc;
+    }
+
+    .dash-label {
+      display: block;
+      margin: 0 0 6px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .dash-input {
       width: 100%;
-      padding: 10px 12px;
-      margin-bottom: var(--gap);
-      border: 1px solid #ccc;
-      border-radius: 10px;
-      font-size: 0.95rem;
+      margin-bottom: 14px;
+      padding: 12px 14px;
+      border: 1px solid #e5ebef;
+      border-radius: 12px;
+      background: #fff;
       font-family: inherit;
+      font-size: 0.95rem;
+      color: var(--navy);
     }
-    button {
-      padding: 8px 14px;
+
+    .dash-input:focus {
+      outline: none;
+      border-color: var(--sage-btn);
+    }
+
+    .dash-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .dash-btn {
+      flex: 1;
+      padding: 12px 16px;
       border: none;
-      border-radius: 8px;
+      border-radius: 12px;
       background: var(--sage-btn);
       color: #fff;
-      font-size: 0.9rem;
       font-family: inherit;
+      font-size: 0.95rem;
+      font-weight: 600;
       cursor: pointer;
-      margin-right: 8px;
-      margin-bottom: 8px;
     }
-    button:hover { background: #8a9d76; }
+
+    .dash-btn:hover {
+      background: #8a9d76;
+    }
+
+    .dash-btn.secondary {
+      background: #fff;
+      color: var(--navy);
+      border: 1px solid #e5ebef;
+    }
+
+    .dash-btn.secondary:hover {
+      background: #f4f7f9;
+    }
+
     #status {
-      min-height: 1.4em;
-      padding: 8px 0;
-      font-size: 0.9rem;
+      min-height: 1.3em;
+      margin: 0 0 8px;
+      font-size: 0.88rem;
+      color: var(--muted);
     }
-    #status.error { color: #dc2626; }
-    #status.success { color: #16a34a; }
+
+    #status.error {
+      color: #b91c1c;
+    }
+
+    #status.success {
+      color: #3d6b4f;
+    }
+
+    .auth-state {
+      margin: 0 0 8px;
+      font-size: 0.88rem;
+      color: var(--muted);
+    }
+
     #restList {
       list-style: none;
+      margin: 16px 0 0;
       padding: 0;
-      margin: 12px 0 0;
     }
+
     #restList li {
-      border: 1px solid #e5ebef;
-      border-radius: 10px;
-      padding: 10px 12px;
+      padding: 12px 14px;
       margin-bottom: 8px;
-    }
-    #restList li strong { display: block; color: var(--navy); margin-bottom: 2px; }
-    #restList li span { font-size: 0.85rem; color: #888; }
-    .muted { color: #888; font-size: 0.85rem; margin: 0; }
-    .hint { font-size: 0.8rem; color: #888; margin: -4px 0 12px; }
-
-    .address-wrap {
-      position: relative;
-      margin-bottom: var(--gap);
-    }
-
-    .address-wrap input {
-      margin-bottom: 0;
-    }
-
-    .suggest-list {
-      list-style: none;
-      margin: 4px 0 0;
-      padding: 0;
-      border: 1px solid #d8dde3;
-      border-radius: 10px;
+      border: 1px solid #e5ebef;
+      border-radius: 12px;
       background: #fff;
-      max-height: 180px;
-      overflow-y: auto;
-      box-shadow: 0 8px 20px rgba(30, 58, 95, 0.08);
-      z-index: 5;
-      position: absolute;
-      left: 0;
-      right: 0;
-    }
-
-    .suggest-list[hidden] {
-      display: none;
-    }
-
-    .suggest-list li {
-      border: none;
-      border-radius: 0;
-      margin: 0;
-      padding: 10px 12px;
-      font-size: 0.85rem;
+      font-size: 0.95rem;
+      font-weight: 500;
       color: var(--navy);
-      cursor: pointer;
-      line-height: 1.35;
-      text-align: left;
     }
 
-    .suggest-list li:hover,
-    .suggest-list li.active {
-      background: #f6f9f4;
-    }
-
-    .suggest-list li + li {
-      border-top: 1px solid #eef1f4;
+    #restList:empty::after {
+      content: "No restaurants yet.";
+      display: block;
+      padding: 8px 0;
+      font-size: 0.9rem;
+      color: var(--muted);
     }
   </style>
 </head>
@@ -120,48 +140,30 @@
   <div class="phone-shell">
     <div class="phone-frame has-nav">
       <div class="phone-content">
-        <h1>Restaurant Dashboard</h1>
-        <p class="page-copy" style="margin-bottom: 16px;">
-          <a href="profile.html" style="color: var(--sage-btn); text-decoration: none; font-weight: 600;">← Back to profile</a>
-        </p>
+        <a class="back-link" href="profile.html">← Back to profile</a>
+        <h1 class="page-title">Restaurant Dashboard</h1>
+        <p class="page-copy">Add and manage the spots you own.</p>
 
+        <p class="auth-state" id="authState"></p>
         <div id="status" aria-live="polite"></div>
-        <p class="muted" id="authState" style="margin-bottom: 12px;">Not logged in.</p>
 
-        <section>
-          <h2>Add restaurant</h2>
-          <label for="restName">Restaurant name</label>
-          <input id="restName" type="text" placeholder="e.g. Blue Fig Cafe" />
+        <div class="dash-card">
+          <label class="dash-label" for="restName">Restaurant name</label>
+          <input class="dash-input" id="restName" type="text" placeholder="e.g. Blue Fig Cafe" />
 
-          <label for="restAddress">Address</label>
-          <div class="address-wrap">
-            <input id="restAddress" type="text" placeholder="Start typing an address…" autocomplete="off" />
-            <ul class="suggest-list" id="suggestList" hidden></ul>
+          <div class="dash-actions">
+            <button type="button" class="dash-btn" id="addBtn">Add</button>
+            <button type="button" class="dash-btn secondary" id="loadBtn">Load</button>
           </div>
-          <p class="hint">Suggestions appear as you type. Pick one so it maps correctly.</p>
 
-          <button type="button" id="addBtn">Add</button>
-        </section>
-
-        <section>
-          <h2>Find your restaurants</h2>
-          <label for="searchQuery">Search by name or address</label>
-          <input id="searchQuery" type="search" placeholder="Search…" />
-          <button type="button" id="searchBtn">Search</button>
-          <button type="button" id="loadBtn">Show all</button>
           <ul id="restList"></ul>
-        </section>
+        </div>
       </div>
       <nav class="bottom-nav" aria-label="Main"></nav>
     </div>
   </div>
   <script src="app.js"></script>
   <script>
-    let selectedLat = null;
-    let selectedLng = null;
-    let suggestTimer = null;
-    let activeSuggestIndex = -1;
-
     function accessToken() {
       return localStorage.getItem("accessToken");
     }
@@ -175,81 +177,7 @@
     function showAuthState() {
       const email = localStorage.getItem("email");
       document.getElementById("authState").textContent =
-        accessToken() && email
-          ? `Logged in as ${email}.`
-          : "Not logged in.";
-    }
-
-    function hideSuggestions() {
-      const list = document.getElementById("suggestList");
-      list.innerHTML = "";
-      list.hidden = true;
-      activeSuggestIndex = -1;
-    }
-
-    function applySuggestion(item) {
-      document.getElementById("restAddress").value = item.label;
-      selectedLat = item.lat;
-      selectedLng = item.lng;
-      hideSuggestions();
-    }
-
-    function renderSuggestions(items) {
-      const list = document.getElementById("suggestList");
-      list.innerHTML = "";
-      activeSuggestIndex = -1;
-      if (!items.length) {
-        list.hidden = true;
-        return;
-      }
-      items.forEach((item, index) => {
-        const li = document.createElement("li");
-        li.textContent = item.label;
-        li.addEventListener("mousedown", (e) => {
-          e.preventDefault();
-          applySuggestion(item);
-        });
-        li.dataset.index = String(index);
-        list.appendChild(li);
-      });
-      list._items = items;
-      list.hidden = false;
-    }
-
-    async function fetchSuggestions(query) {
-      if (!accessToken() || query.trim().length < 3) {
-        hideSuggestions();
-        return;
-      }
-      try {
-        const res = await fetch(
-          `${API}/restaurants/address-suggest?q=${encodeURIComponent(query.trim())}`,
-          { headers: { Authorization: `Bearer ${accessToken()}` } }
-        );
-        const data = await res.json().catch(() => []);
-        if (!res.ok) {
-          hideSuggestions();
-          return;
-        }
-        renderSuggestions(data);
-      } catch {
-        hideSuggestions();
-      }
-    }
-
-    function renderList(data) {
-      const list = document.getElementById("restList");
-      list.textContent = "";
-      data.forEach((r) => {
-        const li = document.createElement("li");
-        const title = document.createElement("strong");
-        title.textContent = r.name;
-        const addr = document.createElement("span");
-        addr.textContent = r.address || "No address";
-        li.appendChild(title);
-        li.appendChild(addr);
-        list.appendChild(li);
-      });
+        accessToken() && email ? `Signed in as ${email}` : "Not signed in.";
     }
 
     async function addRestaurant() {
@@ -258,34 +186,23 @@
         return;
       }
       const name = document.getElementById("restName").value.trim();
-      const address = document.getElementById("restAddress").value.trim();
-      if (!name || !address) {
-        setStatus("Name and address are required.", true);
+      if (!name) {
+        setStatus("Enter a restaurant name.", true);
         return;
       }
-      setStatus("Saving restaurant…");
       try {
-        const body = { name, address };
-        if (selectedLat != null && selectedLng != null) {
-          body.lat = selectedLat;
-          body.lng = selectedLng;
-        }
         const res = await fetch(`${API}/restaurants/`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${accessToken()}`,
+            Authorization: `Bearer ${accessToken()}`,
           },
-          body: JSON.stringify(body),
+          body: JSON.stringify({ name }),
         });
-        const data = await res.json().catch(() => ({}));
+        const data = await res.json();
         if (res.ok) {
-          setStatus(`Added "${data.name}" at ${data.address}.`);
+          setStatus(`Added "${data.name}".`);
           document.getElementById("restName").value = "";
-          document.getElementById("restAddress").value = "";
-          selectedLat = null;
-          selectedLng = null;
-          hideSuggestions();
           loadRestaurants();
         } else {
           setStatus(data.error || "Could not add restaurant.", true);
@@ -295,26 +212,29 @@
       }
     }
 
-    async function loadRestaurants(query = "") {
+    async function loadRestaurants() {
       if (!accessToken()) {
         setStatus("Log in first", true);
         return;
       }
       try {
-        const url = query
-          ? `${API}/restaurants/?q=${encodeURIComponent(query)}`
-          : `${API}/restaurants/`;
-        const res = await fetch(url, {
+        const res = await fetch(`${API}/restaurants/`, {
           method: "GET",
-          headers: { "Authorization": `Bearer ${accessToken()}` },
+          headers: { Authorization: `Bearer ${accessToken()}` },
         });
-        const data = await res.json().catch(() => []);
+        const data = await res.json();
         if (res.ok) {
-          renderList(data);
+          const list = document.getElementById("restList");
+          list.textContent = "";
+          data.forEach((r) => {
+            const li = document.createElement("li");
+            li.textContent = r.name;
+            list.appendChild(li);
+          });
           setStatus(
-            query
-              ? `Found ${data.length} match${data.length === 1 ? "" : "es"}.`
-              : `Loaded ${data.length} restaurant(s).`
+            data.length
+              ? `${data.length} restaurant${data.length === 1 ? "" : "s"}`
+              : ""
           );
         } else {
           setStatus(data.error || data.msg || "Could not load restaurants.", true);
@@ -324,64 +244,8 @@
       }
     }
 
-    const addressInput = document.getElementById("restAddress");
-    addressInput.addEventListener("input", () => {
-      selectedLat = null;
-      selectedLng = null;
-      const query = addressInput.value;
-      clearTimeout(suggestTimer);
-      if (query.trim().length < 3) {
-        hideSuggestions();
-        return;
-      }
-      suggestTimer = setTimeout(() => fetchSuggestions(query), 350);
-    });
-
-    addressInput.addEventListener("keydown", (e) => {
-      const list = document.getElementById("suggestList");
-      const items = list._items || [];
-      if (list.hidden || !items.length) return;
-
-      if (e.key === "ArrowDown") {
-        e.preventDefault();
-        activeSuggestIndex = Math.min(activeSuggestIndex + 1, items.length - 1);
-      } else if (e.key === "ArrowUp") {
-        e.preventDefault();
-        activeSuggestIndex = Math.max(activeSuggestIndex - 1, 0);
-      } else if (e.key === "Enter" && activeSuggestIndex >= 0) {
-        e.preventDefault();
-        applySuggestion(items[activeSuggestIndex]);
-        return;
-      } else if (e.key === "Escape") {
-        hideSuggestions();
-        return;
-      } else {
-        return;
-      }
-
-      [...list.children].forEach((li, i) => {
-        li.classList.toggle("active", i === activeSuggestIndex);
-      });
-    });
-
-    addressInput.addEventListener("blur", () => {
-      setTimeout(hideSuggestions, 150);
-    });
-
     document.getElementById("addBtn").addEventListener("click", addRestaurant);
-    document.getElementById("loadBtn").addEventListener("click", () => {
-      document.getElementById("searchQuery").value = "";
-      loadRestaurants();
-    });
-    document.getElementById("searchBtn").addEventListener("click", () => {
-      loadRestaurants(document.getElementById("searchQuery").value.trim());
-    });
-    document.getElementById("searchQuery").addEventListener("keydown", (e) => {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        loadRestaurants(document.getElementById("searchQuery").value.trim());
-      }
-    });
+    document.getElementById("loadBtn").addEventListener("click", loadRestaurants);
 
     showAuthState();
     if (accessToken()) loadRestaurants();

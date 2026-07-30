@@ -135,6 +135,63 @@
       background: var(--sage-btn-hover);
     }
 
+    .auth-divider {
+      display: none;
+      align-items: center;
+      gap: 12px;
+      margin: 28px 0;
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+
+    .auth-divider.visible {
+      display: flex;
+    }
+
+    .auth-divider::before,
+    .auth-divider::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .btn-google {
+      display: none;
+      width: 100%;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 14px 16px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: #fff;
+      color: var(--navy);
+      font-family: inherit;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .btn-google.visible {
+      display: flex;
+    }
+
+    .btn-google:hover {
+      background: #f4f7f9;
+    }
+
+    .btn-google:disabled {
+      opacity: 0.6;
+      cursor: wait;
+    }
+
+    .btn-google svg {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+    }
+
     .signup-row {
       margin: 36px 0 0;
       font-size: 0.9rem;
@@ -169,6 +226,18 @@
 
         <div id="status" aria-live="polite"></div>
 
+        <button type="button" class="btn-google" id="googleBtn" aria-label="Continue with Google">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+          </svg>
+          Continue with Google
+        </button>
+
+        <div class="auth-divider" id="authDivider">or</div>
+
         <form id="authForm" class="auth-form">
           <div class="field">
             <label for="email">Email address</label>
@@ -199,9 +268,17 @@
     </div>
   </div>
 
+  <script src="https://cdn.auth0.com/js/auth0-spa-js/2.1/auth0-spa-js.production.js"></script>
   <script src="app.js"></script>
   <script>
     let mode = "login";
+    let auth0Client = null;
+    let auth0CallbackUrl = "http://localhost:5000/login.html";
+
+    // Auth0 callback must match Allowed Callback URLs exactly — always use localhost
+    if (location.hostname === "127.0.0.1") {
+      location.replace("http://localhost:5000" + location.pathname + location.search + location.hash);
+    }
 
     function setStatus(message, isError = false) {
       const el = document.getElementById("status");
@@ -243,6 +320,13 @@
       };
     }
 
+    function finishLogin(accessToken, email) {
+      localStorage.setItem("accessToken", accessToken);
+      localStorage.setItem("email", email);
+      setupBottomNav();
+      window.location.assign("index.html");
+    }
+
     async function loginWithCredentials(email, password) {
       const res = await fetch(`${API}/auth/login`, {
         method: "POST",
@@ -253,10 +337,100 @@
       if (!res.ok || !data.access_token) {
         throw new Error(data.error || "Login failed.");
       }
-      localStorage.setItem("accessToken", data.access_token);
-      localStorage.setItem("email", email);
-      setupBottomNav();
-      window.location.assign("index.html");
+      finishLogin(data.access_token, data.email || email);
+    }
+
+    async function exchangeAuth0Token(idToken) {
+      const res = await fetch(`${API}/auth/auth0`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id_token: idToken }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.access_token) {
+        throw new Error(data.error || "Auth0 login failed.");
+      }
+      finishLogin(data.access_token, data.email);
+    }
+
+    function redirectUri() {
+      return auth0CallbackUrl;
+    }
+
+    function showGoogleLogin() {
+      document.getElementById("googleBtn").classList.add("visible");
+      document.getElementById("authDivider").classList.add("visible");
+    }
+
+    async function initAuth0() {
+      const googleBtn = document.getElementById("googleBtn");
+
+      try {
+        const res = await fetch(`${API}/auth/auth0-config`);
+        const cfg = await res.json().catch(() => ({}));
+        if (!cfg.configured || !cfg.domain || !cfg.clientId) {
+          return;
+        }
+
+        if (cfg.callbackUrl) {
+          auth0CallbackUrl = cfg.callbackUrl;
+        }
+
+        // Show the button as soon as Auth0 is configured
+        showGoogleLogin();
+
+        if (typeof auth0 === "undefined" || !auth0.createAuth0Client) {
+          throw new Error("Auth0 script failed to load. Check your network, then refresh.");
+        }
+
+        auth0Client = await auth0.createAuth0Client({
+          domain: cfg.domain,
+          clientId: cfg.clientId,
+          authorizationParams: {
+            redirect_uri: redirectUri(),
+            scope: "openid profile email",
+            ...(cfg.audience ? { audience: cfg.audience } : {}),
+          },
+          cacheLocation: "localstorage",
+        });
+
+        const params = new URLSearchParams(window.location.search);
+        if (params.has("code") && params.has("state")) {
+          setStatus("Finishing Google sign-in…");
+          googleBtn.disabled = true;
+          await auth0Client.handleRedirectCallback();
+          window.history.replaceState({}, document.title, "/login.html");
+          const claims = await auth0Client.getIdTokenClaims();
+          if (!claims || !claims.__raw) {
+            throw new Error("Could not read Auth0 ID token.");
+          }
+          await exchangeAuth0Token(claims.__raw);
+        }
+      } catch (err) {
+        setStatus(err.message || "Could not start Google sign-in.", true);
+        googleBtn.disabled = false;
+      }
+    }
+
+    async function loginWithGoogle() {
+      if (!auth0Client) {
+        setStatus("Auth0 is not configured yet.", true);
+        return;
+      }
+      setStatus("Redirecting to Google…");
+      document.getElementById("googleBtn").disabled = true;
+      try {
+        await auth0Client.loginWithRedirect({
+          authorizationParams: {
+            connection: "google-oauth2",
+            redirect_uri: redirectUri(),
+            scope: "openid profile email",
+          },
+        });
+      } catch (err) {
+        document.getElementById("googleBtn").disabled = false;
+        setStatus(err.message || "Could not open Google login.", true);
+      }
     }
 
     async function handleSubmit(event) {
@@ -300,6 +474,7 @@
       setMode(mode === "login" ? "signup" : "login");
     });
     document.getElementById("authForm").addEventListener("submit", handleSubmit);
+    document.getElementById("googleBtn").addEventListener("click", loginWithGoogle);
 
     document.getElementById("togglePassword").addEventListener("click", () => {
       const input = document.getElementById("password");
@@ -310,6 +485,8 @@
         showing ? "Show password" : "Hide password"
       );
     });
+
+    initAuth0();
   </script>
 </body>
 </html>

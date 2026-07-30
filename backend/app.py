@@ -3,7 +3,7 @@ from pathlib import Path
 from flask import Flask, send_from_directory
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
-from config import Config
+from config import Config, apply_auth0_config
 from models import db
 from routes.auth import auth_bp
 from routes.restaurants import restaurants_bp
@@ -14,6 +14,7 @@ FRONTEND = Path(__file__).resolve().parent.parent / "frontend"
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
+    apply_auth0_config(app)
     CORS(app)
     db.init_app(app)
     JWTManager(app)
@@ -62,4 +63,4 @@ def _ensure_restaurant_location_columns():
 
 if __name__ == "__main__":
     app = create_app()
-    app.run(debug=True, port=5000)
+    app.run(debug=True, port=5000, host="127.0.0.1")

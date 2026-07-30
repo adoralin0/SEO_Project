@@ -27,7 +27,6 @@ function setupBottomNav() {
 
   const links = [
     { href: "index.html", label: "Home", match: ["index.html"] },
-    { href: "map.html", label: "Map", match: ["map.html"] },
     { href: "explore.html", label: "Explore", match: ["explore.html"] },
     { href: "profile.html", label: "Profile", match: ["profile.html", "dashboard.html"] },
   ];
