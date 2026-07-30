@@ -3,22 +3,252 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Loyable</title>
+  <title>Home | Loyable</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="rewards.css" />
 </head>
 <body>
   <div class="phone-shell">
     <div class="phone-frame has-nav">
       <div class="phone-content">
-        <h1 class="page-title">Loyable</h1>
-        <p class="page-copy">Welcome home. Earn rewards at local spots in the Loyable network.</p>
+        <h1 class="page-title" id="welcomeBanner">Welcome back</h1>
+
+        <div class="search-wrap">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8a9a90" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <path d="m21 21-4.35-4.35"></path>
+          </svg>
+          <input id="searchInput" type="search" placeholder="Search rewards..." autocomplete="off" />
+        </div>
+
+        <div class="rewards-heading-row">
+          <h2>Rewards</h2>
+        </div>
+        <div id="rewardsCta"></div>
+        <div id="rewardTiles" class="reward-grid" hidden></div>
+
+        <div class="total-points">
+          <div class="label">Total Points Earned</div>
+          <div class="value" id="totalPoints">0</div>
+        </div>
+
+        <div id="byRestaurant"></div>
       </div>
       <nav class="bottom-nav" aria-label="Main"></nav>
     </div>
   </div>
+  <script src="points.js"></script>
   <script src="app.js"></script>
+  <script>
+    let trackedRestaurants = readPointsMap();
+    let claimedRewards = readRewardsMap();
+    let expandedRestaurant = null;
+    let searchTerm = "";
+
+    function mergeEarnedPoints() {
+      const state = readNavState();
+      const earned = state.earnedPoints;
+      if (earned == null || state.earnedProcessed) return;
+
+      if (typeof earned === "number") {
+        addTotalPoints(earned);
+      } else if (typeof earned === "object") {
+        const sum = Object.values(earned).reduce(
+          (s, p) => s + (Math.floor(Number(p)) || 0),
+          0
+        );
+        addTotalPoints(sum);
+      }
+      writeNavState({ earnedPoints: null, earnedProcessed: true });
+    }
+
+    function rewardTiles() {
+      return Object.entries(claimedRewards).flatMap(([restaurantName, rewards]) =>
+        (rewards || []).map((reward) => ({ ...reward, restaurantName }))
+      );
+    }
+
+    function displayedTiles() {
+      const q = searchTerm.trim().toLowerCase();
+      let tiles = rewardTiles().filter((r) => r.name.toLowerCase().includes(q));
+      for (let i = tiles.length - 1; i > 0; i -= 1) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [tiles[i], tiles[j]] = [tiles[j], tiles[i]];
+      }
+      return tiles.slice(0, 4);
+    }
+
+    function handleDeleteReward(restaurantName, rewardId, rewardPoints) {
+      const claimed = readRewardsMap();
+      const updated = (claimed[restaurantName] || []).filter(
+        (r) => String(r.id) !== String(rewardId)
+      );
+      const nextClaimed = { ...claimed, [restaurantName]: updated };
+      writeRewardsMap(nextClaimed);
+      claimedRewards = nextClaimed;
+      addTotalPoints(rewardPoints);
+      render();
+    }
+
+    function openRewardQr(restaurantName, reward) {
+      const pending = {
+        restaurantName,
+        restaurantId: reward.restaurantId,
+        menuItemId: reward.menuItemId,
+        points: reward.points,
+        rewardId: reward.id,
+        reward,
+      };
+      localStorage.setItem("loyablePendingClaim", JSON.stringify(pending));
+      writeNavState({ ...pending, pendingClaim: true });
+      location.assign("reward-qr.html");
+    }
+
+    function render() {
+      document.getElementById("welcomeBanner").textContent =
+        `Welcome back, ${getDisplayName()}`;
+      document.getElementById("totalPoints").textContent = String(readTotalPoints());
+
+      const cta = document.getElementById("rewardsCta");
+      const grid = document.getElementById("rewardTiles");
+      const tiles = rewardTiles();
+
+      if (tiles.length === 0) {
+        grid.hidden = true;
+        grid.innerHTML = "";
+        cta.innerHTML =
+          '<a class="cta-earn" href="explore.html">Click Here to Start Earning</a>';
+      } else {
+        cta.innerHTML = "";
+        grid.hidden = false;
+        grid.innerHTML = displayedTiles()
+          .map(
+            (reward) => `
+          <button type="button" class="reward-tile" data-rest="${encodeURIComponent(reward.restaurantName)}" data-id="${encodeURIComponent(reward.id)}">
+            <div class="meta">
+              <strong>${escapeHtml(reward.name)}</strong>
+              <span>${escapeHtml(reward.restaurantName)}</span>
+            </div>
+          </button>`
+          )
+          .join("");
+        grid.querySelectorAll(".reward-tile").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const restaurantName = decodeURIComponent(btn.dataset.rest);
+            const id = decodeURIComponent(btn.dataset.id);
+            const reward = (claimedRewards[restaurantName] || []).find((r) => String(r.id) === id);
+            if (reward) openRewardQr(restaurantName, reward);
+          });
+        });
+      }
+
+      const by = document.getElementById("byRestaurant");
+      const rewardNames = Object.keys(claimedRewards).filter(
+        (n) => (claimedRewards[n] || []).length > 0
+      );
+      const names = [...new Set([...Object.keys(trackedRestaurants), ...rewardNames])].sort();
+      if (names.length === 0) {
+        by.innerHTML = `
+          <div class="empty-box">
+            <h3>No restaurants yet</h3>
+            <p>Go to Explore and add restaurants — your points work at any of them</p>
+          </div>`;
+        return;
+      }
+
+      by.innerHTML = `<div class="section-label">Your restaurants · ${readTotalPoints()} pts shared</div>`;
+      names.forEach((restaurantName) => {
+        const open = expandedRestaurant === restaurantName;
+        const claimed = claimedRewards[restaurantName] || [];
+        const card = document.createElement("div");
+        card.className = "rest-card";
+        card.innerHTML = `
+          <div class="rest-card-top">
+            <div>
+              <div class="name">${escapeHtml(restaurantName)}</div>
+              <div class="hint">Tap to use your account points here</div>
+            </div>
+          </div>
+          <div class="rest-expanded" ${open ? "" : "hidden"}>
+            ${
+              claimed.length
+                ? claimed
+                    .map(
+                      (reward) => `
+              <div class="claimed-row">
+                <button type="button" class="info claim-open" data-id="${escapeAttr(reward.id)}">
+                  <strong>${escapeHtml(reward.name)}</strong>
+                  <span>Tap to claim</span>
+                </button>
+                <div class="claimed-pts">${reward.points} pts</div>
+                <button type="button" class="del-btn" data-id="${escapeAttr(reward.id)}" data-pts="${escapeAttr(reward.points)}" aria-label="Delete reward">×</button>
+              </div>`
+                    )
+                    .join("")
+                : `<div style="font-size:0.8rem;color:var(--muted);text-align:center;padding:8px 0">No unlocked rewards yet. Use points to redeem, then claim here.</div>`
+            }
+            <div class="action-row">
+              <a class="btn-use" href="menu.html">Use Points</a>
+              <a class="btn-get" href="get-points.html">Get Points</a>
+            </div>
+          </div>`;
+
+        card.querySelector(".rest-card-top").addEventListener("click", () => {
+          expandedRestaurant = open ? null : restaurantName;
+          render();
+        });
+
+        card.querySelectorAll(".claim-open").forEach((btn) => {
+          btn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            const reward = claimed.find((r) => String(r.id) === btn.dataset.id);
+            if (reward) openRewardQr(restaurantName, reward);
+          });
+        });
+
+        card.querySelectorAll(".del-btn").forEach((btn) => {
+          btn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            handleDeleteReward(restaurantName, btn.dataset.id, btn.dataset.pts);
+          });
+        });
+
+        card.querySelector(".btn-use").addEventListener("click", (e) => {
+          e.stopPropagation();
+          writeNavState({ restaurantName, redeemPoints: true });
+        });
+        card.querySelector(".btn-get").addEventListener("click", (e) => {
+          e.stopPropagation();
+          writeNavState({ restaurantName });
+        });
+
+        by.appendChild(card);
+      });
+    }
+
+    function escapeHtml(s) {
+      return String(s)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+    function escapeAttr(s) {
+      return escapeHtml(s);
+    }
+
+    document.getElementById("searchInput").addEventListener("input", (e) => {
+      searchTerm = e.target.value;
+      render();
+    });
+
+    mergeEarnedPoints();
+    trackedRestaurants = readPointsMap();
+    claimedRewards = readRewardsMap();
+    render();
+  </script>
 </body>
 </html>

@@ -35,6 +35,94 @@
       word-break: break-all;
     }
 
+    .profile-card h2 {
+      margin: 0 0 14px;
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--navy);
+    }
+
+    .profile-card .field {
+      margin-bottom: 12px;
+    }
+
+    .profile-card select,
+    .profile-card input[type="number"],
+    .profile-card input[type="text"] {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid #e5ebef;
+      border-radius: 12px;
+      font-family: inherit;
+      font-size: 0.95rem;
+      color: var(--navy);
+      background: #fff;
+    }
+
+    .profile-card select:focus,
+    .profile-card input:focus {
+      outline: none;
+      border-color: var(--sage-btn);
+    }
+
+    .add-points-btn {
+      width: 100%;
+      margin-top: 4px;
+      padding: 12px 16px;
+      border: none;
+      border-radius: 12px;
+      background: var(--sage-btn);
+      color: #fff;
+      font-family: inherit;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .add-points-btn:hover {
+      background: #8a9d76;
+    }
+
+    #pointsStatus {
+      min-height: 1.2em;
+      margin: 10px 0 0;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    #pointsStatus.ok { color: #3d6b4f; }
+    #pointsStatus.err { color: #b91c1c; }
+
+    #balancesList {
+      list-style: none;
+      margin: 12px 0 0;
+      padding: 0;
+    }
+
+    #balancesList li {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid #e5ebef;
+      font-size: 0.9rem;
+      color: var(--navy);
+    }
+
+    #balancesList li:last-child { border-bottom: none; }
+
+    #balancesList .pts {
+      font-weight: 700;
+      color: var(--sage-btn);
+      white-space: nowrap;
+    }
+
+    #balancesList:empty::after {
+      content: "No points yet.";
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+
     .owner-btn {
       display: block;
       width: 100%;
@@ -88,12 +176,33 @@
           <p class="profile-email" id="profileEmail">—</p>
         </div>
 
+        <div class="profile-card">
+          <h2>Add points</h2>
+          <p class="page-copy" style="margin-bottom:14px;font-size:0.88rem">
+            Points go to your shared account balance and can be used at any restaurant.
+          </p>
+          <div class="field">
+            <label class="profile-label" for="pointsAmount">Points to add</label>
+            <input id="pointsAmount" type="number" min="1" step="1" value="100" />
+          </div>
+          <button type="button" class="add-points-btn" id="addPointsBtn">Add points</button>
+          <p id="pointsStatus" aria-live="polite"></p>
+        </div>
+
+        <div class="profile-card">
+          <h2>Account balance</h2>
+          <p class="profile-email" id="totalBalance">0 pts</p>
+          <p class="profile-label" style="margin-top:16px">Tracked restaurants</p>
+          <ul id="balancesList"></ul>
+        </div>
+
         <a class="owner-btn" href="dashboard.html">Are you a restaurant owner?</a>
         <button type="button" class="logout-btn" id="logoutBtn">Log out</button>
       </div>
       <nav class="bottom-nav" aria-label="Main"></nav>
     </div>
   </div>
+  <script src="points.js"></script>
   <script src="app.js"></script>
   <script>
     document.getElementById("profileEmail").textContent =
@@ -104,6 +213,42 @@
       localStorage.removeItem("email");
       window.location.assign("login.html");
     });
+
+    function setStatus(msg, ok) {
+      const el = document.getElementById("pointsStatus");
+      el.textContent = msg;
+      el.className = ok ? "ok" : "err";
+    }
+
+    function renderBalances() {
+      document.getElementById("totalBalance").textContent = `${readTotalPoints()} pts`;
+      const list = document.getElementById("balancesList");
+      const names = Object.keys(readPointsMap());
+      list.innerHTML = "";
+      if (!names.length) {
+        list.innerHTML = "<li style='color:var(--muted);font-size:0.88rem'>None yet — add from Explore</li>";
+        return;
+      }
+      names.forEach((name) => {
+        const li = document.createElement("li");
+        li.innerHTML = `<span>${name}</span>`;
+        list.appendChild(li);
+      });
+    }
+
+    document.getElementById("addPointsBtn").addEventListener("click", () => {
+      const amount = Math.floor(Number(document.getElementById("pointsAmount").value));
+      if (!amount || amount < 1) {
+        setStatus("Enter a positive number of points.", false);
+        return;
+      }
+      const total = addTotalPoints(amount);
+      document.getElementById("pointsAmount").value = "100";
+      setStatus(`Added ${amount} pts. Account balance: ${total}.`, true);
+      renderBalances();
+    });
+
+    renderBalances();
   </script>
 </body>
 </html>

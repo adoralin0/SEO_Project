@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Menu | Loyable</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    .menu-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 16px;
+      text-align: left;
+    }
+    .menu-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      background: #fafbfc;
+      border: 1px solid #e5ebef;
+      border-radius: 16px;
+      padding: 14px 16px;
+    }
+    .menu-item strong {
+      display: block;
+      color: var(--navy);
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+    .menu-item span {
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+    .menu-item button {
+      border: none;
+      border-radius: 12px;
+      padding: 10px 14px;
+      background: var(--sage-btn);
+      color: #fff;
+      font-family: inherit;
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .menu-item button:hover {
+      background: #8a9d76;
+    }
+    #balanceNote {
+      margin: 8px 0 0;
+      font-size: 0.88rem;
+      color: var(--muted);
+      font-weight: 500;
+    }
+    #menuStatus {
+      min-height: 1.2em;
+      margin-top: 12px;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+    #menuStatus.err {
+      color: #b91c1c;
+    }
+  </style>
+</head>
+<body>
+  <div class="phone-shell">
+    <div class="phone-frame has-nav">
+      <div class="phone-content">
+        <h1 class="page-title" id="title">Menu</h1>
+        <p class="page-copy" id="copy">Loading rewards…</p>
+        <p id="balanceNote"></p>
+        <div id="menuList" class="menu-list"></div>
+        <p id="menuStatus"></p>
+      </div>
+      <nav class="bottom-nav" aria-label="Main"></nav>
+    </div>
+  </div>
+  <script src="points.js"></script>
+  <script src="app.js"></script>
+  <script>
+    const state = readNavState();
+    const restaurantName = state.restaurantName || "Restaurant";
+    let restaurantId = state.restaurantId || null;
+    let items = [];
+
+    document.getElementById("title").textContent = restaurantName;
+    document.getElementById("balanceNote").textContent =
+      `Your balance: ${readTotalPoints()} pts`;
+
+    function setStatus(msg, isErr) {
+      const el = document.getElementById("menuStatus");
+      el.textContent = msg || "";
+      el.className = isErr ? "err" : "";
+    }
+
+    function render() {
+      const list = document.getElementById("menuList");
+      if (!items.length) {
+        list.innerHTML = "<p class='page-copy'>No menu items yet.</p>";
+        return;
+      }
+      list.innerHTML = items
+        .map(
+          (item) => `
+        <div class="menu-item">
+          <div>
+            <strong>${escapeHtml(item.name)}</strong>
+            <span>${item.points} pts</span>
+          </div>
+          <button type="button" data-id="${item.id}">Redeem</button>
+        </div>`
+        )
+        .join("");
+      list.querySelectorAll("button").forEach((btn) => {
+        btn.addEventListener("click", () => redeem(Number(btn.dataset.id)));
+      });
+    }
+
+    function escapeHtml(s) {
+      return String(s)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    async function redeem(itemId) {
+      const item = items.find((i) => i.id === itemId);
+      if (!item) return;
+      if (readTotalPoints() < item.points) {
+        setStatus(`Not enough points. You have ${readTotalPoints()} pts.`, true);
+        return;
+      }
+      if (!restaurantId) {
+        setStatus("Restaurant not loaded yet. Try again.", true);
+        return;
+      }
+
+      if (!spendTotalPoints(item.points)) {
+        setStatus(`Not enough points. You have ${readTotalPoints()} pts.`, true);
+        return;
+      }
+
+      const reward = {
+        id: String(Date.now()),
+        name: item.name,
+        points: item.points,
+        menuItemId: item.id,
+        restaurantId,
+      };
+      const claimed = readRewardsMap();
+      const list = claimed[restaurantName] || [];
+      list.push(reward);
+      claimed[restaurantName] = list;
+      writeRewardsMap(claimed);
+
+      const tracked = readPointsMap();
+      if (tracked[restaurantName] === undefined) {
+        tracked[restaurantName] = 0;
+        writePointsMap(tracked);
+      }
+
+      const pending = {
+        restaurantName,
+        restaurantId,
+        menuItemId: item.id,
+        points: item.points,
+        rewardId: reward.id,
+        reward,
+      };
+      localStorage.setItem("loyablePendingClaim", JSON.stringify(pending));
+      writeNavState({
+        ...pending,
+        pendingClaim: true,
+      });
+      location.assign("reward-qr.html");
+    }
+
+    async function loadMenu() {
+      const token = localStorage.getItem("accessToken");
+      try {
+        const url = restaurantId
+          ? `${API}/restaurants/menu?id=${encodeURIComponent(restaurantId)}&name=${encodeURIComponent(restaurantName)}`
+          : `${API}/restaurants/menu?name=${encodeURIComponent(restaurantName)}`;
+        const res = await fetch(url, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          document.getElementById("copy").textContent =
+            data.error || "Could not load menu for this restaurant.";
+          return;
+        }
+        restaurantId = data.restaurant.id;
+        writeNavState({ restaurantName: data.restaurant.name, restaurantId });
+        items = data.items || [];
+        document.getElementById("copy").textContent =
+          "Redeem with your shared points.";
+        render();
+      } catch (err) {
+        document.getElementById("copy").textContent = `Network error: ${err.message}`;
+      }
+    }
+
+    loadMenu();
+  </script>
+</body>
+</html>

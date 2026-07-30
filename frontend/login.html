@@ -273,11 +273,12 @@
   <script>
     let mode = "login";
     let auth0Client = null;
-    let auth0CallbackUrl = "http://localhost:5000/login.html";
+    // Use 127.0.0.1 — "localhost" is often taken by another Node app on this machine
+    let auth0CallbackUrl = "http://127.0.0.1:5000/login.html";
 
-    // Auth0 callback must match Allowed Callback URLs exactly — always use localhost
-    if (location.hostname === "127.0.0.1") {
-      location.replace("http://localhost:5000" + location.pathname + location.search + location.hash);
+    // Keep Auth0 on 127.0.0.1 (matches Flask); don't bounce to localhost
+    if (location.hostname === "localhost") {
+      location.replace("http://127.0.0.1:5000" + location.pathname + location.search + location.hash);
     }
 
     function setStatus(message, isError = false) {

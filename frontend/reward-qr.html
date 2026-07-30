@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Claim Reward | Loyable</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="rewards.css" />
+  <style>
+    .claim-card {
+      border: 1px solid #e5ebef;
+      border-radius: 16px;
+      padding: 20px;
+      margin: 20px 0;
+      background: #fafbfc;
+      text-align: left;
+    }
+    .claim-card .code-label {
+      margin: 0 0 6px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .claim-card .code-value {
+      margin: 0 0 16px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--navy);
+      word-break: break-all;
+    }
+    #claimBtn {
+      display: block;
+      width: 100%;
+      padding: 14px 16px;
+      border: none;
+      border-radius: 12px;
+      background: var(--sage-btn);
+      color: #fff;
+      font-family: inherit;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    #claimBtn:hover { background: #8a9d76; }
+    #claimBtn:disabled {
+      opacity: 0.6;
+      cursor: default;
+    }
+    #claimStatus {
+      min-height: 1.3em;
+      margin-top: 12px;
+      font-size: 0.88rem;
+      color: var(--muted);
+    }
+    #claimStatus.ok { color: #3d6b4f; font-weight: 600; }
+    #claimStatus.err { color: #b91c1c; }
+  </style>
+</head>
+<body>
+  <div class="phone-shell">
+    <div class="phone-frame has-nav">
+      <div class="phone-content">
+        <h1 class="page-title">Show this to redeem</h1>
+        <p class="page-copy" id="detail">Reward</p>
+        <div class="claim-card">
+          <p class="code-label">QR placeholder</p>
+          <p class="code-value" id="code">—</p>
+          <button type="button" id="claimBtn">Claim reward</button>
+          <p id="claimStatus" aria-live="polite"></p>
+        </div>
+      </div>
+      <nav class="bottom-nav" aria-label="Main"></nav>
+    </div>
+  </div>
+  <script src="points.js"></script>
+  <script src="app.js"></script>
+  <script>
+    const PENDING_KEY = "loyablePendingClaim";
+
+    function readPending() {
+      try {
+        return JSON.parse(localStorage.getItem(PENDING_KEY) || "null");
+      } catch {
+        return null;
+      }
+    }
+
+    function clearPending() {
+      localStorage.removeItem(PENDING_KEY);
+    }
+
+    const state = readNavState();
+    const pending = readPending();
+
+    const restaurantName = (pending && pending.restaurantName) || state.restaurantName || "";
+    const restaurantId = (pending && pending.restaurantId) || state.restaurantId || (state.reward && state.reward.restaurantId);
+    const menuItemId = (pending && pending.menuItemId) || state.menuItemId || (state.reward && state.reward.menuItemId);
+    const reward = (pending && pending.reward) || state.reward || { name: "Reward", id: "—" };
+    const rewardId = (pending && pending.rewardId) || reward.id;
+    const pointsCost = Math.floor(Number((pending && pending.points) || reward.points)) || 0;
+    const canClaim = Boolean(restaurantId && menuItemId && rewardId);
+
+    document.getElementById("detail").textContent =
+      `${reward.name}${restaurantName ? " · " + restaurantName : ""}` +
+      (pointsCost ? ` · ${pointsCost} pts` : "");
+    document.getElementById("code").textContent =
+      `LOY-${String(reward.id || menuItemId || "REWARD").slice(-6).toUpperCase()}`;
+
+    const claimBtn = document.getElementById("claimBtn");
+    const statusEl = document.getElementById("claimStatus");
+
+    function setStatus(msg, kind) {
+      statusEl.textContent = msg || "";
+      statusEl.className = kind || "";
+    }
+
+    if (!canClaim) {
+      claimBtn.disabled = true;
+      setStatus("Open a reward from Home or Explore → Rewards, then tap Redeem to claim here.");
+    } else {
+      setStatus("Show this code, then tap Claim to finish — it will leave Your Rewards.");
+    }
+
+    function removeRewardFromWallet() {
+      const claimed = readRewardsMap();
+      const list = (claimed[restaurantName] || []).filter(
+        (r) => String(r.id) !== String(rewardId)
+      );
+      claimed[restaurantName] = list;
+      writeRewardsMap(claimed);
+    }
+
+    claimBtn.addEventListener("click", async (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      if (!canClaim || claimBtn.disabled) return;
+
+      claimBtn.disabled = true;
+      setStatus("Claiming…");
+
+      const token = localStorage.getItem("accessToken");
+      try {
+        const res = await fetch(`${API}/restaurants/${restaurantId}/redeem`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ menu_item_id: Number(menuItemId) }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          claimBtn.disabled = false;
+          setStatus(data.error || "Could not register claim with the restaurant.", "err");
+          return;
+        }
+      } catch (err) {
+        claimBtn.disabled = false;
+        setStatus(`Network error: ${err.message}`, "err");
+        return;
+      }
+
+      removeRewardFromWallet();
+
+      const tracked = readPointsMap();
+      if (restaurantName && tracked[restaurantName] === undefined) {
+        tracked[restaurantName] = 0;
+        writePointsMap(tracked);
+      }
+
+      clearPending();
+      writeNavState({
+        pendingClaim: false,
+        restaurantName,
+        restaurantId,
+        menuItemId: null,
+        reward: null,
+        rewardId: null,
+      });
+
+      claimBtn.textContent = "Claimed ✓";
+      setStatus("Claimed! Removed from Your Rewards and logged for the restaurant.", "ok");
+      setTimeout(() => location.assign("index.html"), 900);
+    });
+  </script>
+</body>
+</html>

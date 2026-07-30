@@ -33,6 +33,9 @@ def create_app():
     with app.app_context():
         db.create_all()
         _ensure_restaurant_location_columns()
+        _ensure_restaurant_image_column()
+        _seed_missing_menus()
+        _reassign_demo_redemptions()
 
     return app
 
@@ -59,6 +62,51 @@ def _ensure_restaurant_location_columns():
             conn.execute(text(stmt))
         if alterations:
             conn.commit()
+
+
+def _ensure_restaurant_image_column():
+    from sqlalchemy import inspect, text
+
+    inspector = inspect(db.engine)
+    if "restaurant" not in inspector.get_table_names():
+        return
+    with db.engine.connect() as conn:
+        rows = conn.execute(text("PRAGMA table_info(restaurant)")).fetchall()
+        cols = {row[1] for row in rows}
+        if "image_url" not in cols:
+            conn.execute(text("ALTER TABLE restaurant ADD COLUMN image_url VARCHAR(500)"))
+            conn.commit()
+
+
+def _seed_missing_menus():
+    from models import Restaurant
+    from menu_seed import seed_default_menu
+
+    for r in Restaurant.query.filter(Restaurant.owner_id.isnot(None)).all():
+        seed_default_menu(r)
+
+
+def _reassign_demo_redemptions():
+    """Move redemptions off unowned demo duplicates onto the owned restaurant."""
+    from models import Restaurant, Redemption
+
+    owned = {
+        (r.name or "").strip().lower(): r
+        for r in Restaurant.query.filter(Restaurant.owner_id.isnot(None)).all()
+    }
+    changed = False
+    for demo in Restaurant.query.filter(Restaurant.owner_id.is_(None)).all():
+        key = (demo.name or "").strip().lower()
+        target = owned.get(key)
+        if not target:
+            continue
+        for row in Redemption.query.filter_by(restaurant_id=demo.id).all():
+            row.restaurant_id = target.id
+            # Keep item name; menu_item_id may point at demo menu — clear to avoid FK confusion
+            row.menu_item_id = None
+            changed = True
+    if changed:
+        db.session.commit()
 
 
 if __name__ == "__main__":

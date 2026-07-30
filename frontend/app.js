@@ -27,8 +27,8 @@ function setupBottomNav() {
 
   const links = [
     { href: "index.html", label: "Home", match: ["index.html"] },
-    { href: "explore.html", label: "Explore", match: ["explore.html"] },
-    { href: "profile.html", label: "Profile", match: ["profile.html", "dashboard.html"] },
+    { href: "explore.html", label: "Explore", match: ["explore.html", "menu.html", "get-points.html", "reward-qr.html"] },
+    { href: "profile.html", label: "Me", match: ["profile.html", "dashboard.html"] },
   ];
 
   nav.innerHTML = links

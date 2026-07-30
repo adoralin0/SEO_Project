@@ -39,6 +39,6 @@ def apply_auth0_config(app):
     app.config["AUTH0_CLIENT_ID"] = os.environ.get("AUTH0_CLIENT_ID", "").strip()
     app.config["AUTH0_AUDIENCE"] = os.environ.get("AUTH0_AUDIENCE", "").strip()
     app.config["AUTH0_CALLBACK_URL"] = (
-        os.environ.get("AUTH0_CALLBACK_URL", "http://localhost:5000/login.html").strip()
-        or "http://localhost:5000/login.html"
+        os.environ.get("AUTH0_CALLBACK_URL", "http://127.0.0.1:5000/login.html").strip()
+        or "http://127.0.0.1:5000/login.html"
     )

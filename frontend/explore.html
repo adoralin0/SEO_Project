@@ -8,17 +8,150 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="rewards.css" />
 </head>
 <body>
   <div class="phone-shell">
     <div class="phone-frame has-nav">
       <div class="phone-content">
-        <h1 class="page-title">Explore</h1>
-        <ul id="list"></ul>
+        <div class="explore-hero">
+          <h1>Explore</h1>
+          <p class="sub">Find spots & start earning</p>
+        </div>
+
+        <div class="search-wrap">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8a9a90" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <path d="m21 21-4.35-4.35"></path>
+          </svg>
+          <input id="searchInput" type="search" placeholder="Search restaurants..." autocomplete="off" />
+        </div>
+
+        <h2 class="explore-title">Recommended</h2>
+        <div id="grid" class="explore-grid"></div>
       </div>
       <nav class="bottom-nav" aria-label="Main"></nav>
     </div>
   </div>
+  <script src="points.js"></script>
   <script src="app.js"></script>
+  <script>
+    let restaurants = [];
+    let tracked = readPointsMap();
+    let searchTerm = "";
+
+    function isTracked(name) {
+      return tracked[name] !== undefined;
+    }
+
+    function toggleTrack(restaurant, event) {
+      event.stopPropagation();
+      if (tracked[restaurant.name] === undefined) {
+        tracked = { ...tracked, [restaurant.name]: 0 };
+      } else {
+        tracked = { ...tracked };
+        delete tracked[restaurant.name];
+      }
+      writePointsMap(tracked);
+      render();
+    }
+
+    function openMenu(restaurant) {
+      writeNavState({
+        restaurantName: restaurant.name,
+        restaurantId: restaurant.id || null,
+      });
+      location.assign("menu.html");
+    }
+
+    function filtered() {
+      const q = searchTerm.toLowerCase();
+      return restaurants.filter((r) => r.name.toLowerCase().includes(q));
+    }
+
+    function render() {
+      const grid = document.getElementById("grid");
+      const list = filtered();
+      if (!list.length) {
+        grid.innerHTML =
+          '<p style="grid-column:1/-1;text-align:center;color:var(--muted);padding:12px 0">No restaurants yet. Owners can add spots from the dashboard.</p>';
+        return;
+      }
+      grid.innerHTML = list
+        .map(
+          (r, i) => `
+        <div class="explore-card ${isTracked(r.name) ? "tracked" : ""}" data-i="${i}">
+          <div class="body">
+            <div class="name">${escapeHtml(r.name)}</div>
+            <div class="actions">
+              <button type="button" class="rewards-btn">Rewards</button>
+              <button type="button" class="track-btn ${isTracked(r.name) ? "on" : "add"}" aria-label="Track">
+                ${isTracked(r.name) ? "✓" : "+"}
+              </button>
+            </div>
+          </div>
+        </div>`
+        )
+        .join("");
+
+      grid.querySelectorAll(".explore-card").forEach((card) => {
+        const restaurant = list[Number(card.dataset.i)];
+        card.addEventListener("click", () => openMenu(restaurant));
+        card.querySelector(".rewards-btn").addEventListener("click", (e) => {
+          e.stopPropagation();
+          openMenu(restaurant);
+        });
+        card.querySelector(".track-btn").addEventListener("click", (e) =>
+          toggleTrack(restaurant, e)
+        );
+      });
+    }
+
+    function escapeHtml(s) {
+      return String(s)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    document.getElementById("searchInput").addEventListener("input", (e) => {
+      searchTerm = e.target.value;
+      render();
+    });
+
+    async function loadRestaurants() {
+      const token = localStorage.getItem("accessToken");
+      if (!token) {
+        location.assign("login.html");
+        return;
+      }
+      try {
+        const res = await fetch(`${API}/restaurants/discover`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.status === 401) {
+          location.assign("login.html");
+          return;
+        }
+        if (!res.ok) {
+          restaurants = [];
+          render();
+          return;
+        }
+        const data = await res.json();
+        restaurants = (data || []).map((r) => ({
+          id: r.id,
+          name: r.name,
+        }));
+        render();
+      } catch (_) {
+        restaurants = [];
+        render();
+      }
+    }
+
+    loadRestaurants();
+  </script>
 </body>
 </html>

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Get Points | Loyable</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="rewards.css" />
+  <style>
+    .points-card {
+      border: 1px solid #e5ebef;
+      border-radius: 16px;
+      padding: 20px;
+      margin: 20px 0;
+      background: #fafbfc;
+    }
+  </style>
+</head>
+<body>
+  <div class="phone-shell">
+    <div class="phone-frame has-nav">
+      <div class="phone-content">
+        <h1 class="page-title" id="title">Get Points</h1>
+        <p class="page-copy">Simulate a visit — earn +100 points on your shared account balance.</p>
+        <div class="points-card">
+          <button type="button" class="cta-earn" id="earnBtn" style="margin:0;width:100%">Complete visit (+100 pts)</button>
+        </div>
+      </div>
+      <nav class="bottom-nav" aria-label="Main"></nav>
+    </div>
+  </div>
+  <script src="points.js"></script>
+  <script src="app.js"></script>
+  <script>
+    const restaurantName = readNavState().restaurantName || "Restaurant";
+    document.getElementById("title").textContent = `Get Points · ${restaurantName}`;
+
+    document.getElementById("earnBtn").addEventListener("click", () => {
+      addTotalPoints(100);
+      const tracked = readPointsMap();
+      if (tracked[restaurantName] === undefined) {
+        tracked[restaurantName] = 0;
+        writePointsMap(tracked);
+      }
+      location.assign("index.html");
+    });
+  </script>
+</body>
+</html>

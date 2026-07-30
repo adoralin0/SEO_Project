@@ -17,10 +17,7 @@
       text-decoration: none;
       color: var(--muted);
     }
-
-    .back-link:hover {
-      color: var(--navy);
-    }
+    .back-link:hover { color: var(--navy); }
 
     .dash-card {
       border: 1px solid #e5ebef;
@@ -57,10 +54,7 @@
       border-color: var(--sage-btn);
     }
 
-    .dash-actions {
-      display: flex;
-      gap: 10px;
-    }
+    .dash-actions { display: flex; gap: 10px; }
 
     .dash-btn {
       flex: 1;
@@ -74,19 +68,20 @@
       font-weight: 600;
       cursor: pointer;
     }
-
-    .dash-btn:hover {
-      background: #8a9d76;
-    }
-
+    .dash-btn:hover { background: #8a9d76; }
     .dash-btn.secondary {
       background: #fff;
       color: var(--navy);
       border: 1px solid #e5ebef;
     }
-
-    .dash-btn.secondary:hover {
-      background: #f4f7f9;
+    .dash-btn.secondary:hover { background: #f4f7f9; }
+    .dash-btn.danger {
+      background: #fff;
+      color: #b91c1c;
+      border: 1px solid #fecaca;
+      flex: 0;
+      padding: 8px 12px;
+      font-size: 0.8rem;
     }
 
     #status {
@@ -95,14 +90,8 @@
       font-size: 0.88rem;
       color: var(--muted);
     }
-
-    #status.error {
-      color: #b91c1c;
-    }
-
-    #status.success {
-      color: #3d6b4f;
-    }
+    #status.error { color: #b91c1c; }
+    #status.success { color: #3d6b4f; }
 
     .auth-state {
       margin: 0 0 8px;
@@ -110,78 +99,99 @@
       color: var(--muted);
     }
 
-    #restList {
-      list-style: none;
-      margin: 16px 0 0;
-      padding: 0;
+    .rest-block {
+      border: 1px solid #e5ebef;
+      border-radius: 14px;
+      background: #fff;
+      margin-bottom: 12px;
+      overflow: hidden;
     }
 
-    #restList li {
-      padding: 12px 14px;
-      margin-bottom: 8px;
-      border: 1px solid #e5ebef;
-      border-radius: 12px;
-      background: #fff;
-      font-size: 0.95rem;
-      font-weight: 500;
+    .rest-block-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      padding: 14px;
+      cursor: pointer;
+      font-weight: 600;
       color: var(--navy);
     }
 
-    #restList:empty::after {
-      content: "No restaurants yet.";
-      display: block;
-      padding: 8px 0;
-      font-size: 0.9rem;
-      color: var(--muted);
+    .rest-block-body {
+      padding: 0 14px 14px;
+      border-top: 1px solid #eef2f5;
     }
 
-    /* styles for dashboard metrics / charts */
-    .stat-note {
-      margin: -8px 0 14px;
+    .rest-block-body[hidden] { display: none; }
+
+    .subhead {
+      margin: 14px 0 8px;
       font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
       color: var(--muted);
     }
 
-    .hbar-row {
-      margin-bottom: 12px;
+    .menu-row, .redeem-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 0;
+      border-bottom: 1px solid #f0f3f6;
+      font-size: 0.9rem;
+      color: var(--navy);
+    }
+    .menu-row:last-child, .redeem-row:last-child { border-bottom: none; }
+
+    .pts-tag {
+      font-weight: 700;
+      color: var(--sage-btn);
+      white-space: nowrap;
     }
 
-    .hbar-row:last-child {
-      margin-bottom: 0;
+    .add-menu-row {
+      display: grid;
+      grid-template-columns: 1fr 90px auto;
+      gap: 8px;
+      margin-top: 10px;
     }
 
+    .add-menu-row .dash-input { margin-bottom: 0; }
+
+    .empty-note {
+      font-size: 0.85rem;
+      color: var(--muted);
+      padding: 6px 0;
+    }
+
+    .hbar-row { margin-bottom: 10px; }
     .hbar-top {
       display: flex;
       justify-content: space-between;
       margin-bottom: 4px;
       font-size: 0.85rem;
     }
-
-    .hbar-name {
-      font-weight: 500;
-      color: var(--navy);
-    }
-
-    .hbar-value {
-      font-weight: 700;
-      color: var(--sage-btn);
-      white-space: nowrap;
-    }
-
     .hbar-track {
       height: 10px;
       border-radius: 6px;
       background: #e5ebef;
       overflow: hidden;
     }
-
     .hbar-fill {
       height: 100%;
       border-radius: 6px;
       background: var(--sage-btn);
     }
 
-    /* for "daily customers" dashboard section */
+    .stat-note {
+      margin: -4px 0 12px;
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+
     .vbar-chart {
       display: flex;
       align-items: flex-end;
@@ -211,6 +221,7 @@
       max-width: 28px;
       border-radius: 6px 6px 0 0;
       background: var(--sage-btn);
+      min-height: 2px;
     }
 
     .vbar-label {
@@ -218,6 +229,18 @@
       font-size: 0.75rem;
       font-weight: 500;
       color: var(--muted);
+    }
+
+    .stats-select {
+      width: 100%;
+      margin-bottom: 12px;
+      padding: 10px 12px;
+      border: 1px solid #e5ebef;
+      border-radius: 12px;
+      font-family: inherit;
+      font-size: 0.9rem;
+      color: var(--navy);
+      background: #fff;
     }
   </style>
 </head>
@@ -227,42 +250,51 @@
       <div class="phone-content">
         <a class="back-link" href="profile.html">← Back to profile</a>
         <h1 class="page-title">Restaurant Dashboard</h1>
-        <p class="page-copy">Add and manage the spots you own.</p>
+        <p class="page-copy">Manage spots, menus, and point redemptions.</p>
 
         <p class="auth-state" id="authState"></p>
         <div id="status" aria-live="polite"></div>
 
         <div class="dash-card">
-          <label class="dash-label" for="restName">Restaurant name</label>
+          <label class="dash-label" for="restName">Add restaurant</label>
           <input class="dash-input" id="restName" type="text" placeholder="e.g. Blue Fig Cafe" />
-
           <div class="dash-actions">
             <button type="button" class="dash-btn" id="addBtn">Add</button>
-            <button type="button" class="dash-btn secondary" id="loadBtn">Load</button>
+            <button type="button" class="dash-btn secondary" id="loadBtn">Refresh</button>
           </div>
-
-          <ul id="restList"></ul>
         </div>
 
         <div class="dash-card">
-          <span class="dash-label">Most popular menu items</span>
-          <p class="stat-note">SAMPLE DATA</p>
+          <span class="dash-label">Stats for</span>
+          <select class="stats-select" id="statsRestaurant"></select>
+
+          <span class="dash-label">Most redeemed items</span>
+          <p class="stat-note">How many people redeemed each reward</p>
           <div id="menuStats"></div>
-        </div>
 
-        <div class="dash-card">
-          <span class="dash-label">Daily customer count: Last 7 days</span>
-          <p class="stat-note">SAMPLE DATA</p>
+          <span class="dash-label" style="margin-top:18px">Redemptions · last 7 days</span>
+          <p class="stat-note">Each bar is how many items were redeemed that day</p>
           <div id="customerStats"></div>
         </div>
+
+        <div id="restList"></div>
       </div>
       <nav class="bottom-nav" aria-label="Main"></nav>
     </div>
   </div>
   <script src="app.js"></script>
   <script>
+    let restaurants = [];
+    let openId = null;
+
     function accessToken() {
       return localStorage.getItem("accessToken");
+    }
+
+    function authHeaders(json = false) {
+      const h = { Authorization: `Bearer ${accessToken()}` };
+      if (json) h["Content-Type"] = "application/json";
+      return h;
     }
 
     function setStatus(message, isError = false) {
@@ -278,126 +310,304 @@
     }
 
     async function addRestaurant() {
-      if (!accessToken()) {
-        setStatus("Log in first", true);
-        return;
-      }
+      if (!accessToken()) return setStatus("Log in first", true);
       const name = document.getElementById("restName").value.trim();
-      if (!name) {
-        setStatus("Enter a restaurant name.", true);
-        return;
-      }
+      if (!name) return setStatus("Enter a restaurant name.", true);
       try {
         const res = await fetch(`${API}/restaurants/`, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${accessToken()}`,
-          },
+          headers: authHeaders(true),
           body: JSON.stringify({ name }),
         });
         const data = await res.json();
-        if (res.ok) {
-          setStatus(`Added "${data.name}".`);
-          document.getElementById("restName").value = "";
-          loadRestaurants();
-        } else {
-          setStatus(data.error || "Could not add restaurant.", true);
-        }
+        if (!res.ok) return setStatus(data.error || "Could not add restaurant.", true);
+        setStatus(`Added "${data.name}" with a starter menu.`);
+        document.getElementById("restName").value = "";
+        openId = data.id;
+        await loadRestaurants();
       } catch (err) {
         setStatus(`Network error: ${err.message}`, true);
       }
     }
 
     async function loadRestaurants() {
-      if (!accessToken()) {
-        setStatus("Log in first", true);
-        return;
-      }
+      if (!accessToken()) return setStatus("Log in first", true);
       try {
-        const res = await fetch(`${API}/restaurants/`, {
-          method: "GET",
-          headers: { Authorization: `Bearer ${accessToken()}` },
-        });
+        const res = await fetch(`${API}/restaurants/`, { headers: authHeaders() });
         const data = await res.json();
-        if (res.ok) {
-          const list = document.getElementById("restList");
-          list.textContent = "";
-          data.forEach((r) => {
-            const li = document.createElement("li");
-            li.textContent = r.name;
-            list.appendChild(li);
-          });
-          setStatus(
-            data.length
-              ? `${data.length} restaurant${data.length === 1 ? "" : "s"}`
-              : ""
-          );
-        } else {
-          setStatus(data.error || data.msg || "Could not load restaurants.", true);
-        }
+        if (!res.ok) return setStatus(data.error || data.msg || "Could not load.", true);
+        restaurants = data;
+        setStatus(data.length ? `${data.length} restaurant(s)` : "No restaurants yet — add one above.");
+        fillStatsSelect();
+        await refreshOverviewStats();
+        await renderList();
       } catch (err) {
         setStatus(`Network error: ${err.message}`, true);
       }
     }
 
-    function renderFakeStats() {
-      const menuItems = [
-        { name: "Margherita Pizza", value: 128 },
-        { name: "Caesar Salad", value: 94 },
-        { name: "Spicy Chicken Sandwich", value: 81 },
-        { name: "Iced Latte", value: 76 },
-        { name: "Chocolate Brownie", value: 52 },
-      ];
+    function fillStatsSelect() {
+      const sel = document.getElementById("statsRestaurant");
+      const prev = sel.value;
+      sel.innerHTML = restaurants.length
+        ? restaurants.map((r) => `<option value="${r.id}">${escapeHtml(r.name)}</option>`).join("")
+        : '<option value="">No restaurants</option>';
+      if (prev && restaurants.some((r) => String(r.id) === prev)) {
+        sel.value = prev;
+      }
+    }
 
-      const dailyCustomers = [
-        { name: "Mon", value: 42 },
-        { name: "Tue", value: 38 },
-        { name: "Wed", value: 51 },
-        { name: "Thu", value: 47 },
-        { name: "Fri", value: 63 },
-        { name: "Sat", value: 89 },
-        { name: "Sun", value: 71 },
-      ];
-
-      const menuMax = Math.max(...menuItems.map((i) => i.value));
+    async function refreshOverviewStats() {
       const menuEl = document.getElementById("menuStats");
-      menuItems.forEach((item) => {
-        const pct = Math.round((item.value / menuMax) * 100);
-        const row = document.createElement("div");
-        row.className = "hbar-row";
-        row.innerHTML = `
-          <div class="hbar-top">
-            <span class="hbar-name">${item.name}</span>
-            <span class="hbar-value">${item.value}</span>
-          </div>
-          <div class="hbar-track"><div class="hbar-fill" style="width: ${pct}%"></div></div>
-        `;
-        menuEl.appendChild(row);
-      });
+      const dayEl = document.getElementById("customerStats");
+      const sel = document.getElementById("statsRestaurant");
+      const id = Number(sel.value);
 
-      const customerMax = Math.max(...dailyCustomers.map((d) => d.value));
-      const customerEl = document.getElementById("customerStats");
-      customerEl.className = "vbar-chart";
-      dailyCustomers.forEach((day) => {
-        const pct = Math.round((day.value / customerMax) * 100);
+      if (!id) {
+        menuEl.innerHTML = '<p class="empty-note">Add a restaurant to see live stats.</p>';
+        dayEl.innerHTML = "";
+        dayEl.className = "";
+        return;
+      }
+
+      const stats = await fetchRedemptions(id);
+      const popular = stats.popular || [];
+      menuEl.innerHTML = "";
+      if (!popular.length) {
+        menuEl.innerHTML =
+          '<p class="empty-note">No redemptions yet. When someone redeems a reward in the app, counts show up here.</p>';
+      } else {
+        const max = Math.max(...popular.map((p) => p.people || p.count || 1), 1);
+        popular.forEach((item) => {
+          const people = item.people ?? item.count;
+          const pct = Math.round((people / max) * 100);
+          const row = document.createElement("div");
+          row.className = "hbar-row";
+          row.innerHTML = `
+            <div class="hbar-top">
+              <span class="hbar-name">${escapeHtml(item.name)}</span>
+              <span class="pts-tag">${people} ${people === 1 ? "person" : "people"}</span>
+            </div>
+            <div class="hbar-track"><div class="hbar-fill" style="width:${pct}%"></div></div>
+            <div style="font-size:0.72rem;color:var(--muted);margin-top:2px">${item.count} total redeem${item.count === 1 ? "" : "s"}</div>`;
+          menuEl.appendChild(row);
+        });
+      }
+
+      const byDay = stats.by_day || [];
+      dayEl.className = "vbar-chart";
+      dayEl.innerHTML = "";
+      const dayMax = Math.max(...byDay.map((d) => d.value), 1);
+      byDay.forEach((day) => {
+        const pct = Math.max(2, Math.round((day.value / dayMax) * 100));
         const col = document.createElement("div");
         col.className = "vbar-col";
         col.innerHTML = `
           <span class="vbar-value">${day.value}</span>
-          <div class="vbar-fill" style="height: ${pct}%"></div>
-          <span class="vbar-label">${day.name}</span>
-        `;
-        customerEl.appendChild(col);
+          <div class="vbar-fill" style="height:${day.value ? pct : 2}%"></div>
+          <span class="vbar-label">${escapeHtml(day.label)}</span>`;
+        dayEl.appendChild(col);
       });
+    }
+
+    async function fetchMenu(id) {
+      const res = await fetch(`${API}/restaurants/${id}/menu`, { headers: authHeaders() });
+      if (!res.ok) return [];
+      return res.json();
+    }
+
+    async function fetchRedemptions(id) {
+      const res = await fetch(`${API}/restaurants/${id}/redemptions`, { headers: authHeaders() });
+      if (!res.ok) return { redemptions: [], popular: [] };
+      return res.json();
+    }
+
+    async function addMenuItem(restaurantId) {
+      const nameEl = document.getElementById(`menuName-${restaurantId}`);
+      const ptsEl = document.getElementById(`menuPts-${restaurantId}`);
+      const name = nameEl.value.trim();
+      const points = Math.floor(Number(ptsEl.value));
+      if (!name || !points || points < 1) {
+        setStatus("Enter a menu item name and positive points.", true);
+        return;
+      }
+      const res = await fetch(`${API}/restaurants/${restaurantId}/menu`, {
+        method: "POST",
+        headers: authHeaders(true),
+        body: JSON.stringify({ name, points }),
+      });
+      const data = await res.json();
+      if (!res.ok) return setStatus(data.error || "Could not add item.", true);
+      setStatus(`Added "${data.name}" (${data.points} pts).`);
+      nameEl.value = "";
+      ptsEl.value = "50";
+      await renderList();
+    }
+
+    async function deleteMenuItem(restaurantId, itemId) {
+      const res = await fetch(`${API}/restaurants/${restaurantId}/menu/${itemId}`, {
+        method: "DELETE",
+        headers: authHeaders(),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        return setStatus(data.error || "Could not delete item.", true);
+      }
+      setStatus("Menu item removed.");
+      await renderList();
+    }
+
+    async function deleteRestaurant(restaurantId, restaurantName) {
+      if (!confirm(`Delete "${restaurantName}"? This removes its menu and redemption history.`)) {
+        return;
+      }
+      const res = await fetch(`${API}/restaurants/${restaurantId}`, {
+        method: "DELETE",
+        headers: authHeaders(),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        return setStatus(data.error || "Could not delete restaurant.", true);
+      }
+      if (openId === restaurantId) openId = null;
+      setStatus(`Deleted "${restaurantName}".`);
+      await loadRestaurants();
+    }
+
+    async function renderList() {
+      const root = document.getElementById("restList");
+      root.innerHTML = "";
+      if (!restaurants.length) {
+        root.innerHTML = '<p class="empty-note">No restaurants yet.</p>';
+        return;
+      }
+
+      for (const r of restaurants) {
+        const open = openId === r.id;
+        const block = document.createElement("div");
+        block.className = "rest-block";
+        block.innerHTML = `
+          <div class="rest-block-head" data-id="${r.id}">
+            <span>${escapeHtml(r.name)}</span>
+            <span style="display:flex;align-items:center;gap:8px">
+              <button type="button" class="dash-btn danger delete-rest" data-id="${r.id}">Delete</button>
+              <span style="font-size:0.8rem;color:var(--muted)">${open ? "Hide ▲" : "Manage ▼"}</span>
+            </span>
+          </div>
+          <div class="rest-block-body" ${open ? "" : "hidden"} id="body-${r.id}">
+            <p class="empty-note">Loading…</p>
+          </div>`;
+        block.querySelector(".rest-block-head").addEventListener("click", async (e) => {
+          if (e.target.closest(".delete-rest")) return;
+          openId = openId === r.id ? null : r.id;
+          await renderList();
+        });
+        block.querySelector(".delete-rest").addEventListener("click", (e) => {
+          e.stopPropagation();
+          deleteRestaurant(r.id, r.name);
+        });
+        root.appendChild(block);
+
+        if (open) {
+          const body = block.querySelector(".rest-block-body");
+          const [menu, stats] = await Promise.all([
+            fetchMenu(r.id),
+            fetchRedemptions(r.id),
+          ]);
+          body.innerHTML = `
+            <div class="subhead">Reward menu</div>
+            <div id="menuRows-${r.id}"></div>
+            <div class="add-menu-row">
+              <input class="dash-input" id="menuName-${r.id}" placeholder="New item (e.g. Garlic Knots)" />
+              <input class="dash-input" id="menuPts-${r.id}" type="number" min="1" value="50" placeholder="Pts" />
+              <button type="button" class="dash-btn" id="addMenu-${r.id}">Add</button>
+            </div>
+            <div class="subhead">Most redeemed</div>
+            <div id="popular-${r.id}"></div>
+            <div class="subhead">Recent point spends</div>
+            <div id="redeems-${r.id}"></div>
+          `;
+
+          const menuRows = body.querySelector(`#menuRows-${r.id}`);
+          if (!menu.length) {
+            menuRows.innerHTML = '<p class="empty-note">No items yet.</p>';
+          } else {
+            menu.forEach((item) => {
+              const row = document.createElement("div");
+              row.className = "menu-row";
+              row.innerHTML = `
+                <span>${escapeHtml(item.name)}</span>
+                <span style="display:flex;align-items:center;gap:8px">
+                  <span class="pts-tag">${item.points} pts</span>
+                  <button type="button" class="dash-btn danger" data-item="${item.id}">Delete</button>
+                </span>`;
+              row.querySelector("button").addEventListener("click", () =>
+                deleteMenuItem(r.id, item.id)
+              );
+              menuRows.appendChild(row);
+            });
+          }
+
+          body.querySelector(`#addMenu-${r.id}`).addEventListener("click", () =>
+            addMenuItem(r.id)
+          );
+
+          const popularEl = body.querySelector(`#popular-${r.id}`);
+          const popular = stats.popular || [];
+          if (!popular.length) {
+            popularEl.innerHTML = '<p class="empty-note">No redemptions yet.</p>';
+          } else {
+            const max = Math.max(...popular.map((p) => p.people || p.count || 1), 1);
+            popular.slice(0, 5).forEach((p) => {
+              const people = p.people ?? p.count;
+              const pct = Math.round((people / max) * 100);
+              const row = document.createElement("div");
+              row.className = "hbar-row";
+              row.innerHTML = `
+                <div class="hbar-top">
+                  <span>${escapeHtml(p.name)}</span>
+                  <span class="pts-tag">${people} ${people === 1 ? "person" : "people"}</span>
+                </div>
+                <div class="hbar-track"><div class="hbar-fill" style="width:${pct}%"></div></div>`;
+              popularEl.appendChild(row);
+            });
+          }
+
+          const redeemEl = body.querySelector(`#redeems-${r.id}`);
+          const redeems = stats.redemptions || [];
+          if (!redeems.length) {
+            redeemEl.innerHTML = '<p class="empty-note">When customers spend points, they show up here.</p>';
+          } else {
+            redeems.slice(0, 15).forEach((row) => {
+              const el = document.createElement("div");
+              el.className = "redeem-row";
+              el.innerHTML = `
+                <span>
+                  <strong>${escapeHtml(row.item_name)}</strong><br/>
+                  <span style="font-size:0.75rem;color:var(--muted)">${escapeHtml(row.customer_email || "customer")}</span>
+                </span>
+                <span class="pts-tag">−${row.points}</span>`;
+              redeemEl.appendChild(el);
+            });
+          }
+        }
+      }
+    }
+
+    function escapeHtml(s) {
+      return String(s)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
     }
 
     document.getElementById("addBtn").addEventListener("click", addRestaurant);
     document.getElementById("loadBtn").addEventListener("click", loadRestaurants);
+    document.getElementById("statsRestaurant").addEventListener("change", refreshOverviewStats);
 
     showAuthState();
     if (accessToken()) loadRestaurants();
-    renderFakeStats();
   </script>
 </body>
 </html>

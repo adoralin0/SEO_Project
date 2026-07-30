@@ -17,7 +17,7 @@ def auth0_config():
     audience = current_app.config.get("AUTH0_AUDIENCE") or ""
     callback_url = (
         current_app.config.get("AUTH0_CALLBACK_URL")
-        or "http://localhost:5000/login.html"
+        or "http://127.0.0.1:5000/login.html"
     )
     return jsonify(
         {
