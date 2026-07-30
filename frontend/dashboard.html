@@ -134,6 +134,91 @@
       font-size: 0.9rem;
       color: var(--muted);
     }
+
+    /* styles for dashboard metrics / charts */
+    .stat-note {
+      margin: -8px 0 14px;
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+
+    .hbar-row {
+      margin-bottom: 12px;
+    }
+
+    .hbar-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .hbar-top {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 4px;
+      font-size: 0.85rem;
+    }
+
+    .hbar-name {
+      font-weight: 500;
+      color: var(--navy);
+    }
+
+    .hbar-value {
+      font-weight: 700;
+      color: var(--sage-btn);
+      white-space: nowrap;
+    }
+
+    .hbar-track {
+      height: 10px;
+      border-radius: 6px;
+      background: #e5ebef;
+      overflow: hidden;
+    }
+
+    .hbar-fill {
+      height: 100%;
+      border-radius: 6px;
+      background: var(--sage-btn);
+    }
+
+    /* for "daily customers" dashboard section */
+    .vbar-chart {
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+      height: 140px;
+      padding-top: 20px;
+    }
+
+    .vbar-col {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+      height: 100%;
+    }
+
+    .vbar-value {
+      margin-bottom: 4px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--navy);
+    }
+
+    .vbar-fill {
+      width: 100%;
+      max-width: 28px;
+      border-radius: 6px 6px 0 0;
+      background: var(--sage-btn);
+    }
+
+    .vbar-label {
+      margin-top: 6px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--muted);
+    }
   </style>
 </head>
 <body>
@@ -157,6 +242,18 @@
           </div>
 
           <ul id="restList"></ul>
+        </div>
+
+        <div class="dash-card">
+          <span class="dash-label">Most popular menu items</span>
+          <p class="stat-note">SAMPLE DATA</p>
+          <div id="menuStats"></div>
+        </div>
+
+        <div class="dash-card">
+          <span class="dash-label">Daily customer count: Last 7 days</span>
+          <p class="stat-note">SAMPLE DATA</p>
+          <div id="customerStats"></div>
         </div>
       </div>
       <nav class="bottom-nav" aria-label="Main"></nav>
@@ -244,11 +341,63 @@
       }
     }
 
+    function renderFakeStats() {
+      const menuItems = [
+        { name: "Margherita Pizza", value: 128 },
+        { name: "Caesar Salad", value: 94 },
+        { name: "Spicy Chicken Sandwich", value: 81 },
+        { name: "Iced Latte", value: 76 },
+        { name: "Chocolate Brownie", value: 52 },
+      ];
+
+      const dailyCustomers = [
+        { name: "Mon", value: 42 },
+        { name: "Tue", value: 38 },
+        { name: "Wed", value: 51 },
+        { name: "Thu", value: 47 },
+        { name: "Fri", value: 63 },
+        { name: "Sat", value: 89 },
+        { name: "Sun", value: 71 },
+      ];
+
+      const menuMax = Math.max(...menuItems.map((i) => i.value));
+      const menuEl = document.getElementById("menuStats");
+      menuItems.forEach((item) => {
+        const pct = Math.round((item.value / menuMax) * 100);
+        const row = document.createElement("div");
+        row.className = "hbar-row";
+        row.innerHTML = `
+          <div class="hbar-top">
+            <span class="hbar-name">${item.name}</span>
+            <span class="hbar-value">${item.value}</span>
+          </div>
+          <div class="hbar-track"><div class="hbar-fill" style="width: ${pct}%"></div></div>
+        `;
+        menuEl.appendChild(row);
+      });
+
+      const customerMax = Math.max(...dailyCustomers.map((d) => d.value));
+      const customerEl = document.getElementById("customerStats");
+      customerEl.className = "vbar-chart";
+      dailyCustomers.forEach((day) => {
+        const pct = Math.round((day.value / customerMax) * 100);
+        const col = document.createElement("div");
+        col.className = "vbar-col";
+        col.innerHTML = `
+          <span class="vbar-value">${day.value}</span>
+          <div class="vbar-fill" style="height: ${pct}%"></div>
+          <span class="vbar-label">${day.name}</span>
+        `;
+        customerEl.appendChild(col);
+      });
+    }
+
     document.getElementById("addBtn").addEventListener("click", addRestaurant);
     document.getElementById("loadBtn").addEventListener("click", loadRestaurants);
 
     showAuthState();
     if (accessToken()) loadRestaurants();
+    renderFakeStats();
   </script>
 </body>
 </html>
